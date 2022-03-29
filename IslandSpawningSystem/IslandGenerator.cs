@@ -12,6 +12,7 @@ public class IslandGenerator : MonoBehaviour
 
     private void Start()
     {
+       FreePositions.Add(Vector3.zero);
         //TEMP
         //{
         StartCoroutine(DeleyedSpawn());
