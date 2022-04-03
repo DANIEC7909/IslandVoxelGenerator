@@ -7,7 +7,7 @@
 
 ## Island Generation 
 
-### Before Molding Algorithm
+### After Molding Algorithm
 ![image](https://user-images.githubusercontent.com/46851343/161449659-e91bc8df-f9bf-44a8-9a06-9de7778e1689.png)
 ![image](https://user-images.githubusercontent.com/46851343/161449722-92063969-d3bc-4623-858a-cca512d4ca23.png)
 ![image](https://user-images.githubusercontent.com/46851343/161449754-fe27c399-a89a-429b-bbd6-00e499ac0d21.png)
