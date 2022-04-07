@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using TMPro;
+using Unity.Jobs;
 using UnityEngine;
 public class IslandGenerator : MonoBehaviour
 {
@@ -23,11 +24,48 @@ public class IslandGenerator : MonoBehaviour
     public bool Done;
     private void Start()
     {
-        FreePositions.Add(Vector3.zero);
+        //create pivot 
+        UsedPositions.Add(Vector3.zero);
+        Vector3 cachedPos = UsedPositions[0];
+        FreePositions.Add(cachedPos - Vector3.forward);
+        FreePositions.Add(cachedPos + Vector3.forward);
+        FreePositions.Add(cachedPos + Vector3.right);
+        FreePositions.Add(cachedPos - Vector3.right);
+        FreePositions.Add(cachedPos - Vector3.up);
+
+
+        while (iterations < howMuchSpawn)
+        {
+            int posID = Random.Range(0, FreePositions.Count);
+            Vector3 cachedFreePos = FreePositions[posID];
+            UsedPositions.Add(cachedFreePos);
+            //calculate near pos's
+            FreePositions.Add(cachedFreePos - Vector3.forward);
+            FreePositions.Add(cachedFreePos + Vector3.forward);
+            FreePositions.Add(cachedFreePos + Vector3.right);
+            FreePositions.Add(cachedFreePos - Vector3.right);
+            FreePositions.Add(cachedFreePos - Vector3.up);
+        }
     }
+
+   
+
+
     private void Update()
     {
-  
+
+        if (iterations == howMuchSpawn)
+        {
+            Debug.Log("<color=green>FIXING LEVEL 0</color>");
+            if (fixing == false)
+            {
+              //  FixIsland();
+            }
+            Debug.Log("<color=green>ISLAND GENERATION FINISHED!</color>");
+            counter.color = Color.green;
+            counter.text = "DONE!";
+        }
+        counterHow.text = howMuchSpawn.ToString() + " left " + (howMuchSpawn - iterations).ToString();
     }
     public void FixIsland()
     {
