@@ -1,4 +1,6 @@
 # Voxel Island Generator
+## This branch is devoted to faster / more efficient island generation
+
 
 ![Island voxel22-min](https://user-images.githubusercontent.com/46851343/161450395-22473c66-e2c3-438d-8048-ebf455676624.gif)
 
