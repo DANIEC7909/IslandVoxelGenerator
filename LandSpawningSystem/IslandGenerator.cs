@@ -18,6 +18,7 @@ public class IslandGenerator : MonoBehaviour
     public bool CanSpawn = true;
     int iterations;
     [SerializeField] TextMeshProUGUI counter;
+    string testcontent;
     
 
     [SerializeField] List<Vector3> Duplicates = new List<Vector3>();
@@ -61,7 +62,7 @@ public class IslandGenerator : MonoBehaviour
         timer.Stop();
         System.TimeSpan timeTaken = timer.Elapsed;
         UnityEngine.Debug.Log("Island Generation taken: " + timeTaken.TotalSeconds+"s");
-        counter.text = "Island Generation taken: " + timeTaken.TotalSeconds + "s"+" "+ "Initial amount of the voxel "+howMuchSpawn.ToString()+" "+"Amount After Molding "+IslandTiles.Count.ToString();
+       testcontent = "Island Generation taken: " + timeTaken.TotalSeconds + "s"+" "+ "Initial amount of the voxel "+howMuchSpawn.ToString()+" "+"Amount After Molding "+IslandTiles.Count.ToString();
     }
 
    
@@ -69,6 +70,14 @@ public class IslandGenerator : MonoBehaviour
 
     private void Update()
     {
+        if (Input.GetKeyDown(KeyCode.Q))
+        {
+            howMuchSpawn += 500;
+        }
+        if (Input.GetKeyDown(KeyCode.E))
+        {
+            howMuchSpawn -= 500;
+        }
         if (Input.GetKeyDown(KeyCode.R))
         {
             foreach(IslandTile it in IslandTiles)
@@ -84,6 +93,7 @@ public class IslandGenerator : MonoBehaviour
             iterations = 0;
             Start();
         }
+        counter.text = testcontent + " " +" How much voxels to spawn"+howMuchSpawn.ToString();
     }
     public void MoldIsland()
     {
