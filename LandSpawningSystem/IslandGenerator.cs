@@ -26,12 +26,12 @@ public class IslandGenerator : MonoBehaviour
     {
         //create pivot 
         UsedPositions.Add(Vector3.zero);
-        Vector3 cachedPos = UsedPositions[0];
-        FreePositions.Add(cachedPos - Vector3.forward);
-        FreePositions.Add(cachedPos + Vector3.forward);
-        FreePositions.Add(cachedPos + Vector3.right);
-        FreePositions.Add(cachedPos - Vector3.right);
-        FreePositions.Add(cachedPos - Vector3.up);
+        Vector3 InitcachedPos = UsedPositions[0];
+        FreePositions.Add(InitcachedPos - Vector3.forward);
+        FreePositions.Add(InitcachedPos + Vector3.forward);
+        FreePositions.Add(InitcachedPos + Vector3.right);
+        FreePositions.Add(InitcachedPos - Vector3.right);
+        FreePositions.Add(InitcachedPos - Vector3.up);
 
 
         while (iterations < howMuchSpawn)
@@ -39,12 +39,14 @@ public class IslandGenerator : MonoBehaviour
             int posID = Random.Range(0, FreePositions.Count);
             Vector3 cachedFreePos = FreePositions[posID];
             UsedPositions.Add(cachedFreePos);
+            FreePositions.Remove(cachedFreePos);
             //calculate near pos's
             FreePositions.Add(cachedFreePos - Vector3.forward);
             FreePositions.Add(cachedFreePos + Vector3.forward);
             FreePositions.Add(cachedFreePos + Vector3.right);
             FreePositions.Add(cachedFreePos - Vector3.right);
             FreePositions.Add(cachedFreePos - Vector3.up);
+            iterations++;
         }
     }
 
