@@ -1,4 +1,6 @@
+
 using System.Collections.Generic;
+
 using System.Linq;
 using System.Threading;
 using TMPro;
@@ -24,6 +26,8 @@ public class IslandGenerator : MonoBehaviour
     public bool Done;
     private void Start()
     {
+        var timer = new System.Diagnostics.Stopwatch();
+        timer.Start();
         //create pivot 
         UsedPositions.Add(Vector3.zero);
         Vector3 InitcachedPos = UsedPositions[0];
@@ -48,6 +52,14 @@ public class IslandGenerator : MonoBehaviour
             FreePositions.Add(cachedFreePos - Vector3.up);
             iterations++;
         }
+        foreach (Vector3 pos in UsedPositions)
+        {
+            SpawnTileCalc(pos);
+        }
+            MoldIsland();
+        timer.Stop();
+        System.TimeSpan timeTaken = timer.Elapsed;
+        UnityEngine.Debug.Log("Island Generation taken: " + timeTaken.TotalSeconds+"s");
     }
 
    
@@ -55,35 +67,11 @@ public class IslandGenerator : MonoBehaviour
 
     private void Update()
     {
-
-        if (iterations == howMuchSpawn)
-        {
-            Debug.Log("<color=green>FIXING LEVEL 0</color>");
-            if (fixing == false)
-            {
-              //  FixIsland();
-            }
-            Debug.Log("<color=green>ISLAND GENERATION FINISHED!</color>");
-            counter.color = Color.green;
-            counter.text = "DONE!";
-        }
-        counterHow.text = howMuchSpawn.ToString() + " left " + (howMuchSpawn - iterations).ToString();
     }
-    public void FixIsland()
+    public void MoldIsland()
     {
         fixing = true;
-        /*    foreach (Vector3 p in FreePositions)
-            {
-                if (p.y == 0)
-                {
-                    Duplicates.Add(p);
-                    //  SpawnTileByPos(p);
-                }
-            }
-            for(int i =0;i<Duplicates.Count;i++)
-            {
-                SpawnTileByPos(Duplicates[i]);
-            }*/
+    
         Duplicates = FreePositions.Distinct().ToList();
         foreach (Vector3 p in Duplicates)
         {
@@ -105,6 +93,15 @@ public class IslandGenerator : MonoBehaviour
         {
             it.SetBlockType(IslandTile.BlockType.Rock);
         }
+    }
+    public IslandTile SpawnTileCalc(Vector3 pos)
+    {
+        IslandTile it = Instantiate(tileGameObject, pos, Quaternion.identity).GetComponent<IslandTile>();
+      
+        it.SetGeneratorReference(this);
+        IslandTiles.Add(it);
+        setMaterial(it, pos);
+        return it;
     }
     public IslandTile SpawnTile(Vector3 pos)
     {
