@@ -27,30 +27,7 @@ public class IslandGenerator : MonoBehaviour
     }
     private void Update()
     {
-        while (iterations < howMuchSpawn && CanSpawn == true)
-        {
-            
-            IslandTile it = SpawnTile();
-            float proc = (iterations * 100) / howMuchSpawn;
-            Debug.Log("<color=yellow>ISLAND GENERATION PROGRESS <b>" + proc + "%</b> </color>");
-            counter.color = Color.yellow;
-            counter.text = proc + "%";
-            iterations++;
-            CanSpawn = false;
-        }
-
-        if (iterations == howMuchSpawn)
-        {
-            Debug.Log("<color=green>FIXING LEVEL 0</color>");
-            if (fixing == false)
-            {
-                FixIsland();
-            }
-            Debug.Log("<color=green>ISLAND GENERATION FINISHED!</color>");
-            counter.color = Color.green;
-            counter.text = "DONE!";
-        }
-        counterHow.text = howMuchSpawn.ToString() + " left " + (howMuchSpawn - iterations).ToString();
+  
     }
     public void FixIsland()
     {
