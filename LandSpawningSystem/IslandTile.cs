@@ -40,7 +40,7 @@ public class IslandTile : MonoBehaviour
         //done in IslandGenerator.cs
 
         //TODO:: Delegate which is going to be called when tile is initialised// Done
-        Generator.CanSpawn = true;
+     //   Generator.CanSpawn = true;
     } 
     public IslandGenerator SetGeneratorReference(IslandGenerator generator) => Generator = generator;
     public void SetBlockType(BlockType bt)
