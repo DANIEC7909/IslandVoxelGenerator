@@ -93,7 +93,7 @@ public class IslandGenerator : MonoBehaviour
             iterations = 0;
             Start();
         }
-        counter.text = testcontent + " " +" How much voxels to spawn"+howMuchSpawn.ToString();
+        counter.text = testcontent + " " +" How much voxels to spawn "+howMuchSpawn.ToString();
     }
     public void MoldIsland()
     {
