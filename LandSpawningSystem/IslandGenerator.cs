@@ -9,7 +9,7 @@ public class IslandGenerator : MonoBehaviour
     public List<Vector3> FreePositions;
     public List<Vector3> UsedPositions;
     public List<Vector3> DestroyedPositions;
-
+    public Transform PivotTransform;
     public List<IslandTile> IslandTiles = new List<IslandTile>();
     [SerializeField] int howMuchSpawn;
     [SerializeField] GameObject tileGameObject;
@@ -17,7 +17,7 @@ public class IslandGenerator : MonoBehaviour
     int iterations;
     [SerializeField] TextMeshProUGUI counter;
     string testcontent;
-    public enum CalculateMatrixSide { left, right, forward, backward, up, down, dfblr, all }
+    public enum CalculateMatrixSide { left, right, forward, backward, up, down, DownForwardBackwardLeftRight, all }
 
 
     [SerializeField] List<Vector3> Duplicates = new List<Vector3>();
@@ -30,10 +30,10 @@ public class IslandGenerator : MonoBehaviour
         var timer = new System.Diagnostics.Stopwatch();
         timer.Start();
         //create pivot 
-        UsedPositions.Add(Vector3.zero);
+        UsedPositions.Add(PivotTransform.position);
         Vector3 InitcachedPos = UsedPositions[0];
 
-        CalculateNearVectorMatrix(InitcachedPos, CalculateMatrixSide.dfblr, FreePositions);
+        CalculateNearVectorMatrix(InitcachedPos, CalculateMatrixSide.DownForwardBackwardLeftRight, FreePositions);
 
         while (iterations < howMuchSpawn)
         {
@@ -42,7 +42,7 @@ public class IslandGenerator : MonoBehaviour
             UsedPositions.Add(cachedFreePos);
             FreePositions.Remove(cachedFreePos);
             //calculate near pos's
-            CalculateNearVectorMatrix(cachedFreePos, CalculateMatrixSide.dfblr, FreePositions);
+            CalculateNearVectorMatrix(cachedFreePos, CalculateMatrixSide.DownForwardBackwardLeftRight, FreePositions);
             iterations++;
         }
 
@@ -111,6 +111,17 @@ public class IslandGenerator : MonoBehaviour
             it.SetBlockType(IslandTile.BlockType.Rock);
         }
     }
+    /// <summary>
+    /// Returned Vector[] description
+    /// 0-backward
+    /// 1-forward
+    /// 2-right
+    /// 3-left
+    /// 4-up
+    /// </summary>
+    /// <param name="pos"></param>
+    /// <param name="cms"></param>
+    /// <returns></returns>
     public Vector3[] CalculateNearVectorMatrix(Vector3 pos, CalculateMatrixSide cms)
     {
         Vector3[] nPos = null;
@@ -140,7 +151,7 @@ public class IslandGenerator : MonoBehaviour
                 nPos = new Vector3[1];
                 nPos[0] = pos - Vector3.up;
                 break;
-            case CalculateMatrixSide.dfblr:
+            case CalculateMatrixSide.DownForwardBackwardLeftRight:
                 nPos = new Vector3[5];
                 nPos[0] = pos - Vector3.forward;
                 nPos[1] = pos + Vector3.forward;
@@ -161,6 +172,17 @@ public class IslandGenerator : MonoBehaviour
 
         return nPos;
     }
+    /// <summary>
+    /// Returned Vector[] description
+    /// 0-backward
+    /// 1-forward
+    /// 2-right
+    /// 3-left
+    /// 4-up
+    /// </summary>
+    /// <param name="pos"></param>
+    /// <param name="cms"></param>
+    /// <returns></returns>
     public Vector3[] CalculateNearVectorMatrix(Vector3 pos, CalculateMatrixSide cms, List<Vector3> listToAdd, bool AddRemove = true)
     {
         Vector3[] nPos = null;
@@ -190,7 +212,7 @@ public class IslandGenerator : MonoBehaviour
                 nPos = new Vector3[1];
                 nPos[0] = pos - Vector3.up;
                 break;
-            case CalculateMatrixSide.dfblr:
+            case CalculateMatrixSide.DownForwardBackwardLeftRight:
                 nPos = new Vector3[5];
                 nPos[0] = pos - Vector3.forward;
                 nPos[1] = pos + Vector3.forward;
@@ -251,16 +273,18 @@ public class IslandGenerator : MonoBehaviour
         DestroyedPositions.Add(pos);
         IslandTiles.Remove(itt);
         Destroy(it.gameObject);
-        CalculateNearVectorMatrix(pos, CalculateMatrixSide.dfblr, FreePositions, false);
+        CalculateNearVectorMatrix(pos, CalculateMatrixSide.DownForwardBackwardLeftRight, FreePositions, false);
         return it;
     }
     public IslandTile SpawnTileCalc(Vector3 pos)
     {
         IslandTile it = Instantiate(tileGameObject, pos, Quaternion.identity).GetComponent<IslandTile>();
 
-        //    it.SetGeneratorReference(this);
+
         IslandTiles.Add(it);
         setMaterial(it, pos);
+        it.SetPositionMatrix(CalculateNearVectorMatrix(pos, CalculateMatrixSide.DownForwardBackwardLeftRight));
+        it.SetGeneratorInstance(this);
         return it;
     }
     public IslandTile SpawnTile(Vector3 pos)
@@ -268,9 +292,10 @@ public class IslandGenerator : MonoBehaviour
         IslandTile it = Instantiate(tileGameObject, pos, Quaternion.identity).GetComponent<IslandTile>();
         FreePositions.Remove(pos);
         UsedPositions.Add(it.transform.position);
-        //  it.SetGeneratorReference(this);
+        it.SetGeneratorInstance(this);
         IslandTiles.Add(it);
         setMaterial(it, pos);
+        it.SetPositionMatrix(CalculateNearVectorMatrix(pos, CalculateMatrixSide.DownForwardBackwardLeftRight));
         return it;
     }
     public IslandTile SpawnTile()
@@ -284,8 +309,9 @@ public class IslandGenerator : MonoBehaviour
         setMaterial(it, FreePositions[id]);
         FreePositions.Remove(FreePositions[id]);
         UsedPositions.Add(it.transform.position);
-        //   it.SetGeneratorReference(this);
+        it.SetGeneratorInstance(this);
         IslandTiles.Add(it);
+        it.SetPositionMatrix(CalculateNearVectorMatrix(it.transform.position, CalculateMatrixSide.DownForwardBackwardLeftRight));
         return it;
     }
     public List<IslandTile> GetIslandTiles() => IslandTiles;
