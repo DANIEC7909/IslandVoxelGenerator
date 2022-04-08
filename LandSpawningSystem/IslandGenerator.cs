@@ -2,16 +2,18 @@
 using System.Collections.Generic;
 
 using System.Linq;
-using System.Threading;
+using System.Threading.Tasks;
 using TMPro;
+using Unity.Burst;
 using Unity.Jobs;
+using Unity.Mathematics;
 using UnityEngine;
 public class IslandGenerator : MonoBehaviour
 {
     public List<Vector3> FreePositions;
     public List<Vector3> UsedPositions;
     public List<Vector2> DestroyedPositions;
-    
+
     public List<IslandTile> IslandTiles = new List<IslandTile>();
     [SerializeField] int howMuchSpawn;
     [SerializeField] GameObject tileGameObject;
@@ -19,8 +21,8 @@ public class IslandGenerator : MonoBehaviour
     int iterations;
     [SerializeField] TextMeshProUGUI counter;
     string testcontent;
-    
 
+   
     [SerializeField] List<Vector3> Duplicates = new List<Vector3>();
 
 
@@ -42,7 +44,7 @@ public class IslandGenerator : MonoBehaviour
 
         while (iterations < howMuchSpawn)
         {
-            int posID = Random.Range(0, FreePositions.Count);
+            int posID = UnityEngine.Random.Range(0, FreePositions.Count);
             Vector3 cachedFreePos = FreePositions[posID];
             UsedPositions.Add(cachedFreePos);
             FreePositions.Remove(cachedFreePos);
@@ -54,22 +56,28 @@ public class IslandGenerator : MonoBehaviour
             FreePositions.Add(cachedFreePos - Vector3.up);
             iterations++;
         }
-        foreach (Vector3 pos in UsedPositions)
-        {
-            SpawnTileCalc(pos);
-        }
-            MoldIsland();
+      
+            foreach (Vector3 pos in UsedPositions)
+            {
+                SpawnTileCalc(pos);
+            }
+        MoldIsland();
+       
         timer.Stop();
         System.TimeSpan timeTaken = timer.Elapsed;
-        UnityEngine.Debug.Log("Island Generation taken: " + timeTaken.TotalSeconds+"s");
-       testcontent = "Island Generation taken: " + timeTaken.TotalSeconds + "s"+" "+ "Initial amount of the voxel "+howMuchSpawn.ToString()+" "+"Amount After Molding "+IslandTiles.Count.ToString();
+        UnityEngine.Debug.Log("Island Generation taken: " + timeTaken.TotalSeconds + "s");
+        testcontent = "Island Generation taken: " + timeTaken.TotalSeconds + "s" + " " + "Initial amount of the voxel " + howMuchSpawn.ToString() + " " + "Amount After Molding " + IslandTiles.Count.ToString();
     }
 
-   
-
+  
 
     private void Update()
     {
+        if (Input.GetKeyDown(KeyCode.T))
+        {
+            SpawnTile();
+            MoldIsland();
+        }
         if (Input.GetKeyDown(KeyCode.Q))
         {
             howMuchSpawn += 500;
@@ -80,7 +88,7 @@ public class IslandGenerator : MonoBehaviour
         }
         if (Input.GetKeyDown(KeyCode.R))
         {
-            foreach(IslandTile it in IslandTiles)
+            foreach (IslandTile it in IslandTiles)
             {
                 Destroy(it.gameObject);
             }
@@ -93,12 +101,12 @@ public class IslandGenerator : MonoBehaviour
             iterations = 0;
             Start();
         }
-        counter.text = testcontent + " " +" How much voxels to spawn "+howMuchSpawn.ToString();
+        counter.text = testcontent + " " + " How much voxels to spawn " + howMuchSpawn.ToString();
     }
     public void MoldIsland()
     {
         fixing = true;
-    
+
         Duplicates = FreePositions.Distinct().ToList();
         foreach (Vector3 p in Duplicates)
         {
@@ -108,11 +116,11 @@ public class IslandGenerator : MonoBehaviour
     }
     void setMaterial(IslandTile it, Vector3 pos)
     {
-        if (pos.y <= 0&&pos.y>-2)
+        if (pos.y <= 0 && pos.y > -2)
         {
             it.SetBlockType(IslandTile.BlockType.Grass);
         }
-        else if (pos.y <= -2&&pos.y>-5)
+        else if (pos.y <= -2 && pos.y > -5)
         {
             it.SetBlockType(IslandTile.BlockType.Dirt);
         }
@@ -121,14 +129,14 @@ public class IslandGenerator : MonoBehaviour
             it.SetBlockType(IslandTile.BlockType.Rock);
         }
     }
-    public IslandTile SpawnTileCalc(Vector3 pos)
+    public void SpawnTileCalc(Vector3 pos)
     {
         IslandTile it = Instantiate(tileGameObject, pos, Quaternion.identity).GetComponent<IslandTile>();
-      
+
         it.SetGeneratorReference(this);
         IslandTiles.Add(it);
         setMaterial(it, pos);
-        return it;
+    //    return it;
     }
     public IslandTile SpawnTile(Vector3 pos)
     {
@@ -137,16 +145,16 @@ public class IslandGenerator : MonoBehaviour
         UsedPositions.Add(it.transform.position);
         it.SetGeneratorReference(this);
         IslandTiles.Add(it);
-        setMaterial(it,pos);
+        setMaterial(it, pos);
         return it;
     }
 
     public IslandTile SpawnTile()
     {
-        int id = Random.Range(0, FreePositions.Count);
+        int id = UnityEngine.Random.Range(0, FreePositions.Count);
         while (FreePositions[id].y > 0)
         {
-            id = Random.Range(0, FreePositions.Count);
+            id = UnityEngine.Random.Range(0, FreePositions.Count);
         }
         IslandTile it = Instantiate(tileGameObject, FreePositions[id], Quaternion.identity).GetComponent<IslandTile>();
         setMaterial(it, FreePositions[id]);
@@ -156,5 +164,7 @@ public class IslandGenerator : MonoBehaviour
         IslandTiles.Add(it);
         return it;
     }
-
+  
 }
+
+
