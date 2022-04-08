@@ -8,7 +8,7 @@ public class IslandGenerator : MonoBehaviour
 {
     public List<Vector3> FreePositions;
     public List<Vector3> UsedPositions;
-    public List<Vector2> DestroyedPositions;
+    public List<Vector3> DestroyedPositions;
 
     public List<IslandTile> IslandTiles = new List<IslandTile>();
     [SerializeField] int howMuchSpawn;
@@ -17,6 +17,7 @@ public class IslandGenerator : MonoBehaviour
     int iterations;
     [SerializeField] TextMeshProUGUI counter;
     string testcontent;
+    public enum CalculateMatrixSide { left, right, forward, backward, up, down, dfblr, all }
 
 
     [SerializeField] List<Vector3> Duplicates = new List<Vector3>();
@@ -31,12 +32,8 @@ public class IslandGenerator : MonoBehaviour
         //create pivot 
         UsedPositions.Add(Vector3.zero);
         Vector3 InitcachedPos = UsedPositions[0];
-        FreePositions.Add(InitcachedPos - Vector3.forward);
-        FreePositions.Add(InitcachedPos + Vector3.forward);
-        FreePositions.Add(InitcachedPos + Vector3.right);
-        FreePositions.Add(InitcachedPos - Vector3.right);
-        FreePositions.Add(InitcachedPos - Vector3.up);
 
+        CalculateNearVectorMatrix(InitcachedPos, CalculateMatrixSide.dfblr, FreePositions);
 
         while (iterations < howMuchSpawn)
         {
@@ -45,11 +42,7 @@ public class IslandGenerator : MonoBehaviour
             UsedPositions.Add(cachedFreePos);
             FreePositions.Remove(cachedFreePos);
             //calculate near pos's
-            FreePositions.Add(cachedFreePos - Vector3.forward);
-            FreePositions.Add(cachedFreePos + Vector3.forward);
-            FreePositions.Add(cachedFreePos + Vector3.right);
-            FreePositions.Add(cachedFreePos - Vector3.right);
-            FreePositions.Add(cachedFreePos - Vector3.up);
+            CalculateNearVectorMatrix(cachedFreePos, CalculateMatrixSide.dfblr, FreePositions);
             iterations++;
         }
 
@@ -63,19 +56,6 @@ public class IslandGenerator : MonoBehaviour
         System.TimeSpan timeTaken = timer.Elapsed;
         UnityEngine.Debug.Log("Island Generation taken: " + timeTaken.TotalSeconds + "s");
         testcontent = "Island Generation taken: " + timeTaken.TotalSeconds + "s" + " " + "Initial amount of the voxel " + howMuchSpawn.ToString() + " " + "Amount After Molding " + IslandTiles.Count.ToString();
-    }
-    public IslandTile DestroyTile(IslandTile itt)
-    {
-        IslandTile it = itt;
-        Vector3 pos = it.transform.position;
-        DestroyedPositions.Add(pos);
-        Destroy(it.gameObject);
-        FreePositions.Remove(pos - Vector3.forward);
-        FreePositions.Remove(pos + Vector3.forward);
-        FreePositions.Remove(pos + Vector3.right);
-        FreePositions.Remove(pos - Vector3.right);
-        FreePositions.Remove(pos - Vector3.up);
-        return it;
     }
 
 
@@ -116,26 +96,6 @@ public class IslandGenerator : MonoBehaviour
         }
         counter.text = testcontent + " " + " How much voxels to spawn " + howMuchSpawn.ToString();
     }
-    public void FixIsland()
-    {
-        foreach (Vector3 pos in DestroyedPositions)
-        {
-            SpawnTileCalc(pos);
-            DestroyedPositions.Remove(pos);
-            UsedPositions.Add(pos);
-        }
-    }
-    public void MoldIsland()
-    {
-        fixing = true;
-
-        Duplicates = FreePositions.Distinct().ToList();
-        foreach (Vector3 p in Duplicates)
-        {
-            SpawnTile(p);
-        }
-        Done = true;
-    }
     void setMaterial(IslandTile it, Vector3 pos)
     {
         if (pos.y <= 0 && pos.y > -2)
@@ -150,6 +110,149 @@ public class IslandGenerator : MonoBehaviour
         {
             it.SetBlockType(IslandTile.BlockType.Rock);
         }
+    }
+    public Vector3[] CalculateNearVectorMatrix(Vector3 pos, CalculateMatrixSide cms)
+    {
+        Vector3[] nPos = null;
+        switch (cms)
+        {
+            case CalculateMatrixSide.backward:
+                nPos = new Vector3[1];
+                nPos[0] = pos - Vector3.forward;
+                break;
+            case CalculateMatrixSide.forward:
+                nPos = new Vector3[1];
+                nPos[0] = pos + Vector3.forward;
+                break;
+            case CalculateMatrixSide.left:
+                nPos = new Vector3[1];
+                nPos[0] = pos - Vector3.right;
+                break;
+            case CalculateMatrixSide.right:
+                nPos = new Vector3[1];
+                nPos[0] = pos + Vector3.right;
+                break;
+            case CalculateMatrixSide.up:
+                nPos = new Vector3[1];
+                nPos[0] = pos + Vector3.up;
+                break;
+            case CalculateMatrixSide.down:
+                nPos = new Vector3[1];
+                nPos[0] = pos - Vector3.up;
+                break;
+            case CalculateMatrixSide.dfblr:
+                nPos = new Vector3[5];
+                nPos[0] = pos - Vector3.forward;
+                nPos[1] = pos + Vector3.forward;
+                nPos[2] = pos + Vector3.right;
+                nPos[3] = pos - Vector3.right;
+                nPos[4] = pos - Vector3.up;
+                break;
+            case CalculateMatrixSide.all:
+                nPos = new Vector3[6];
+                nPos[0] = pos - Vector3.forward;
+                nPos[1] = pos + Vector3.forward;
+                nPos[2] = pos + Vector3.right;
+                nPos[3] = pos - Vector3.right;
+                nPos[4] = pos - Vector3.up;
+                nPos[5] = pos + Vector3.up;
+                break;
+        }
+
+        return nPos;
+    }
+    public Vector3[] CalculateNearVectorMatrix(Vector3 pos, CalculateMatrixSide cms, List<Vector3> listToAdd, bool AddRemove = true)
+    {
+        Vector3[] nPos = null;
+        switch (cms)
+        {
+            case CalculateMatrixSide.backward:
+                nPos = new Vector3[1];
+                nPos[0] = pos - Vector3.forward;
+                break;
+            case CalculateMatrixSide.forward:
+                nPos = new Vector3[1];
+                nPos[0] = pos + Vector3.forward;
+                break;
+            case CalculateMatrixSide.left:
+                nPos = new Vector3[1];
+                nPos[0] = pos - Vector3.right;
+                break;
+            case CalculateMatrixSide.right:
+                nPos = new Vector3[1];
+                nPos[0] = pos + Vector3.right;
+                break;
+            case CalculateMatrixSide.up:
+                nPos = new Vector3[1];
+                nPos[0] = pos + Vector3.up;
+                break;
+            case CalculateMatrixSide.down:
+                nPos = new Vector3[1];
+                nPos[0] = pos - Vector3.up;
+                break;
+            case CalculateMatrixSide.dfblr:
+                nPos = new Vector3[5];
+                nPos[0] = pos - Vector3.forward;
+                nPos[1] = pos + Vector3.forward;
+                nPos[2] = pos + Vector3.right;
+                nPos[3] = pos - Vector3.right;
+                nPos[4] = pos - Vector3.up;
+                break;
+            case CalculateMatrixSide.all:
+                nPos = new Vector3[6];
+                nPos[0] = pos - Vector3.forward;
+                nPos[1] = pos + Vector3.forward;
+                nPos[2] = pos + Vector3.right;
+                nPos[3] = pos - Vector3.right;
+                nPos[4] = pos - Vector3.up;
+                nPos[5] = pos + Vector3.up;
+                break;
+        }
+        if (AddRemove)
+        {
+            foreach (Vector3 p in nPos)
+            {
+                listToAdd.Add(p);
+            }
+        }
+        else
+        {
+            foreach (Vector3 p in nPos)
+            {
+                listToAdd.Remove(p);
+            }
+        }
+        return nPos;
+    }
+    public void MoldIsland()
+    {
+        fixing = true;
+
+        Duplicates = FreePositions.Distinct().ToList();
+        foreach (Vector3 p in Duplicates)
+        {
+            SpawnTile(p);
+        }
+        Done = true;
+    }
+    public void FixIsland()
+    {
+        foreach (Vector3 pos in DestroyedPositions)
+        {
+            SpawnTileCalc(pos);
+            UsedPositions.Add(pos);
+        }
+        DestroyedPositions.Clear();
+    }
+    public IslandTile DestroyTile(IslandTile itt)
+    {
+        IslandTile it = itt;
+        Vector3 pos = it.transform.position;
+        DestroyedPositions.Add(pos);
+        IslandTiles.Remove(itt);
+        Destroy(it.gameObject);
+        CalculateNearVectorMatrix(pos, CalculateMatrixSide.dfblr, FreePositions, false);
+        return it;
     }
     public IslandTile SpawnTileCalc(Vector3 pos)
     {
@@ -170,7 +273,6 @@ public class IslandGenerator : MonoBehaviour
         setMaterial(it, pos);
         return it;
     }
-
     public IslandTile SpawnTile()
     {
         int id = UnityEngine.Random.Range(0, FreePositions.Count);
@@ -186,6 +288,7 @@ public class IslandGenerator : MonoBehaviour
         IslandTiles.Add(it);
         return it;
     }
+    public List<IslandTile> GetIslandTiles() => IslandTiles;
 
 }
 
