@@ -258,7 +258,7 @@ public class IslandGenerator : MonoBehaviour
     {
         IslandTile it = Instantiate(tileGameObject, pos, Quaternion.identity).GetComponent<IslandTile>();
 
-        it.SetGeneratorReference(this);
+        //    it.SetGeneratorReference(this);
         IslandTiles.Add(it);
         setMaterial(it, pos);
         return it;
@@ -268,7 +268,7 @@ public class IslandGenerator : MonoBehaviour
         IslandTile it = Instantiate(tileGameObject, pos, Quaternion.identity).GetComponent<IslandTile>();
         FreePositions.Remove(pos);
         UsedPositions.Add(it.transform.position);
-        it.SetGeneratorReference(this);
+        //  it.SetGeneratorReference(this);
         IslandTiles.Add(it);
         setMaterial(it, pos);
         return it;
@@ -284,7 +284,7 @@ public class IslandGenerator : MonoBehaviour
         setMaterial(it, FreePositions[id]);
         FreePositions.Remove(FreePositions[id]);
         UsedPositions.Add(it.transform.position);
-        it.SetGeneratorReference(this);
+        //   it.SetGeneratorReference(this);
         IslandTiles.Add(it);
         return it;
     }
