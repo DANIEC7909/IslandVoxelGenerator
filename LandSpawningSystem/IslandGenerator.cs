@@ -114,7 +114,7 @@ public class IslandGenerator : MonoBehaviour
     /// <summary>
     /// Regenerates Island
     /// </summary>
-  public void RegenerateIsland()
+    public void RegenerateIsland()
     {
         Clear();
         Start();
@@ -291,13 +291,13 @@ public class IslandGenerator : MonoBehaviour
     public void MoldIsland()
     {
         fixing = true;
-       
+
         Duplicates = FreePositions.Distinct().ToList();
 
         foreach (Vector3 p in Duplicates)
         {
             SpawnTile(p);
-           
+
         }
         fixing = false;
         Done = true;
@@ -307,20 +307,20 @@ public class IslandGenerator : MonoBehaviour
     /// </summary>
     public void FixIsland()
     {
-        List<IslandTile> ToRegenerate=new List<IslandTile>();
+        List<IslandTile> ToRegenerate = new List<IslandTile>();
         foreach (Vector3 pos in DestroyedPositions)
         {
             SpawnTile(pos);
 
             RecalculateFaces(pos);
         }
-       
+
         DestroyedPositions.Clear();
-       
+
     }
     void RecalculateFaces(Vector3 pos)
     {
-     
+
         Vector3[] PositionsToRegenerate = CalculateNearVectorMatrix(pos, CalculateMatrixSide.all);
 
         List<Vector3> ToRegenerateMatrix = new List<Vector3>();
@@ -338,7 +338,7 @@ public class IslandGenerator : MonoBehaviour
             bool hasValue = IslandTilesDictionary.TryGetValue(trm, out itg); // IslandTilesDictionary[trm];
             if (hasValue) { itg.GenerateCube(); }
         }
-    
+
     }
     /// <summary>
     /// This function destroys tiles and recalculaters faces 
@@ -346,32 +346,16 @@ public class IslandGenerator : MonoBehaviour
     /// <param name="itt"></param>
     public void DestroyTileRecalculateFaces(IslandTile itt)
     {
-        DestroyTile(itt,false);
+        DestroyTile(itt, false);
         Vector3 pos = itt.transform.position;
-        Vector3[] PositionsToRegenerate = CalculateNearVectorMatrix(pos, CalculateMatrixSide.all);
-
-        List<Vector3> ToRegenerateMatrix = new List<Vector3>();
-
-        foreach (Vector3 PtRpos in PositionsToRegenerate)
-        {
-            if (UsedPositions.Contains(PtRpos))
-            {
-                ToRegenerateMatrix.Add(PtRpos);
-            }
-        }
-        foreach (Vector3 trm in ToRegenerateMatrix)
-        {
-            IslandTile itg;
-            bool hasValue = IslandTilesDictionary.TryGetValue(trm, out itg); // IslandTilesDictionary[trm];
-            if (hasValue) { itg.GenerateCube(); }
-        }
+        RecalculateFaces(pos);
         IslandTilesDictionary.Remove(pos);
     }
     /// <summary>
     /// This function only destroys tile and do nothing to face recalculation 
     /// </summary>
     /// <param name="itt"></param>
-    public void DestroyTile(IslandTile itt,bool RemoveInDictionary=true)
+    public void DestroyTile(IslandTile itt, bool RemoveInDictionary = true)
     {
         IslandTile it = itt;
         Vector3 pos = it.transform.position;
