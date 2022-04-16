@@ -2,115 +2,80 @@
 using System.Collections.Generic;
 
 using System.Linq;
-using TMPro;
 using UnityEngine;
 public class IslandGenerator : MonoBehaviour
 {
-    public List<Vector3> FreePositions;
-    public List<Vector3> UsedPositions;
+    public List<Vector3> NonAlocatedPositions;
+    public List<Vector3> AlocatedPositions;
     public List<Vector3> DestroyedPositions;
+    [SerializeField] List<Vector3> Duplicates = new List<Vector3>();
     public Transform PivotTransform;
     public List<IslandTile> IslandTiles = new List<IslandTile>();
     public Dictionary<Vector3, IslandTile> IslandTilesDictionary = new Dictionary<Vector3, IslandTile>();
     [SerializeField] int howMuchSpawn;
     [SerializeField] GameObject tileGameObject;
-    public bool CanSpawn = true;
-    public bool IsMold = true;
+    [SerializeField] bool CanSpawn = true;
+    [SerializeField] bool IsMold = true;
+    public bool CanSpawn_g => CanSpawn;
+    public bool IsMold_g => IsMold;
+    public bool Fixing { get; private set; }
+    public bool Done { get; private set; }
     int iterations;
-    [SerializeField] TextMeshProUGUI counter;
-    string testcontent;
     public enum CalculateMatrixSide { left, right, forward, backward, up, down, DownForwardBackwardLeftRight, all }
+    public System.TimeSpan timeTaken { get; private set; }
 
-
-    [SerializeField] List<Vector3> Duplicates = new List<Vector3>();
-
-
-    [SerializeField] bool fixing;
-    public bool Done;
     private void Start()
     {
         var timer = new System.Diagnostics.Stopwatch();
         timer.Start();
         //create pivot 
-        UsedPositions.Add(PivotTransform.position);
-        Vector3 InitcachedPos = UsedPositions[0];
+        AlocatedPositions.Add(PivotTransform.position);
+        Vector3 InitcachedPos = AlocatedPositions[0];
 
-        CalculateNearVectorMatrix(InitcachedPos, CalculateMatrixSide.DownForwardBackwardLeftRight, FreePositions);
+        CalculateNearVectorMatrix(InitcachedPos, CalculateMatrixSide.DownForwardBackwardLeftRight, NonAlocatedPositions);
 
         while (iterations < howMuchSpawn)
         {
-            int posID = UnityEngine.Random.Range(0, FreePositions.Count);
-            Vector3 cachedFreePos = FreePositions[posID];
-            if (!UsedPositions.Contains(cachedFreePos))
+            int posID = UnityEngine.Random.Range(0, NonAlocatedPositions.Count);
+            Vector3 cachedFreePos = NonAlocatedPositions[posID];
+            if (!AlocatedPositions.Contains(cachedFreePos))
             {
-                UsedPositions.Add(cachedFreePos);
-                FreePositions.Remove(cachedFreePos);
-                CalculateNearVectorMatrix(cachedFreePos, CalculateMatrixSide.DownForwardBackwardLeftRight, FreePositions);
+                AlocatedPositions.Add(cachedFreePos);
+                NonAlocatedPositions.Remove(cachedFreePos);
+                CalculateNearVectorMatrix(cachedFreePos, CalculateMatrixSide.DownForwardBackwardLeftRight, NonAlocatedPositions);
             }
             else
             {
-                FreePositions.Remove(cachedFreePos);
+                NonAlocatedPositions.Remove(cachedFreePos);
                 iterations--;
             }
             //calculate near pos's
             iterations++;
         }
-        foreach (Vector3 dup in UsedPositions)
+        foreach (Vector3 dup in AlocatedPositions)
         {
-            for (int i = 0; i < FreePositions.Count; i++)
+            for (int i = 0; i < NonAlocatedPositions.Count; i++)
             {
-                if (dup == FreePositions[i])
+                if (dup == NonAlocatedPositions[i])
                 {
-                    FreePositions.Remove(dup);
+                    NonAlocatedPositions.Remove(dup);
                 }
             }
         }
 
-        foreach (Vector3 pos in UsedPositions)
+        foreach (Vector3 pos in AlocatedPositions)
         {
             SpawnTileCalc(pos);
         }
         if (IsMold) MoldIsland();
 
         timer.Stop();
-        System.TimeSpan timeTaken = timer.Elapsed;
+        timeTaken = timer.Elapsed;
         UnityEngine.Debug.Log("Island Generation taken: " + timeTaken.TotalSeconds + "s");
-        testcontent = "Island Generation taken: " + timeTaken.TotalSeconds + "s" + " " + "Initial amount of the voxel " + howMuchSpawn.ToString() + " " + "Amount After Molding " + IslandTiles.Count.ToString();
+
     }
 
 
-    private void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.T))
-        {
-            SpawnTileRandom();
-            MoldIsland();
-        }
-        if (Input.GetKeyDown(KeyCode.F))
-        {
-            FixIsland();
-        }
-        if (Input.GetKeyDown(KeyCode.Q))
-        {
-            howMuchSpawn += 500;
-        }
-        if (Input.GetKeyDown(KeyCode.E))
-        {
-            howMuchSpawn -= 500;
-        }
-        if (Input.GetKeyDown(KeyCode.H))
-        {
-            foreach (IslandTile it in IslandTiles)
-            {
-                it.GenerateCube();
-            }
-        }
-        if (Input.GetKeyDown(KeyCode.R))
-        {
-            RegenerateIsland();
-        }
-        counter.text = testcontent + " " + " How much voxels to spawn " + howMuchSpawn.ToString();
-    }
     /// <summary>
     /// Regenerates Island
     /// </summary>
@@ -127,11 +92,11 @@ public class IslandGenerator : MonoBehaviour
         }
         IslandTiles.Clear();
         IslandTilesDictionary.Clear();
-        FreePositions.Clear();
-        UsedPositions.Clear();
+        NonAlocatedPositions.Clear();
+        AlocatedPositions.Clear();
         Duplicates.Clear();
         Done = false;
-        fixing = false;
+        Fixing = false;
         iterations = 0;
     }
     void setMaterial(IslandTile it, Vector3 pos)
@@ -290,16 +255,16 @@ public class IslandGenerator : MonoBehaviour
     /// </summary>
     public void MoldIsland()
     {
-        fixing = true;
+        Fixing = true;
 
-        Duplicates = FreePositions.Distinct().ToList();
+        Duplicates = NonAlocatedPositions.Distinct().ToList();
 
         foreach (Vector3 p in Duplicates)
         {
             SpawnTile(p);
 
         }
-        fixing = false;
+        Fixing = false;
         Done = true;
     }
     /// <summary>
@@ -327,7 +292,7 @@ public class IslandGenerator : MonoBehaviour
 
         foreach (Vector3 PtRpos in PositionsToRegenerate)
         {
-            if (UsedPositions.Contains(PtRpos))
+            if (AlocatedPositions.Contains(PtRpos))
             {
                 ToRegenerateMatrix.Add(PtRpos);
             }
@@ -360,10 +325,10 @@ public class IslandGenerator : MonoBehaviour
         IslandTile it = itt;
         Vector3 pos = it.transform.position;
         DestroyedPositions.Add(pos);
-        UsedPositions.Remove(pos);
+        AlocatedPositions.Remove(pos);
         IslandTiles.Remove(itt);
         Destroy(it.gameObject);
-        CalculateNearVectorMatrix(pos, CalculateMatrixSide.DownForwardBackwardLeftRight, FreePositions, false);
+        CalculateNearVectorMatrix(pos, CalculateMatrixSide.DownForwardBackwardLeftRight, NonAlocatedPositions, false);
         if (RemoveInDictionary)
         {
             IslandTilesDictionary.Remove(pos);
@@ -405,8 +370,8 @@ public class IslandGenerator : MonoBehaviour
         if (!IslandTilesDictionary.ContainsKey(pos))
         {
             IslandTile it = Instantiate(tileGameObject, pos, Quaternion.identity).GetComponent<IslandTile>();
-            FreePositions.Remove(pos);
-            UsedPositions.Add(it.transform.position);
+            NonAlocatedPositions.Remove(pos);
+            AlocatedPositions.Add(it.transform.position);
             IslandTiles.Add(it);
             IslandTilesDictionary.Add(pos, it);
 
@@ -423,17 +388,17 @@ public class IslandGenerator : MonoBehaviour
     }
     public IslandTile SpawnTileRandom()
     {
-        int id = UnityEngine.Random.Range(0, FreePositions.Count);
-        while (FreePositions[id].y > 0)
+        int id = UnityEngine.Random.Range(0, NonAlocatedPositions.Count);
+        while (NonAlocatedPositions[id].y > 0)
         {
-            id = UnityEngine.Random.Range(0, FreePositions.Count);
+            id = UnityEngine.Random.Range(0, NonAlocatedPositions.Count);
         }
-        if (!IslandTilesDictionary.ContainsKey(FreePositions[id]))
+        if (!IslandTilesDictionary.ContainsKey(NonAlocatedPositions[id]))
         {
-            IslandTile it = Instantiate(tileGameObject, FreePositions[id], Quaternion.identity).GetComponent<IslandTile>();
-            setMaterial(it, FreePositions[id]);
-            FreePositions.Remove(FreePositions[id]);
-            UsedPositions.Add(it.transform.position);
+            IslandTile it = Instantiate(tileGameObject, NonAlocatedPositions[id], Quaternion.identity).GetComponent<IslandTile>();
+            setMaterial(it, NonAlocatedPositions[id]);
+            NonAlocatedPositions.Remove(NonAlocatedPositions[id]);
+            AlocatedPositions.Add(it.transform.position);
             it.SetGeneratorInstance(this);
             IslandTiles.Add(it);
             Vector3 pos = it.transform.position;
@@ -447,5 +412,12 @@ public class IslandGenerator : MonoBehaviour
             return null;
         }
     }
+
+    public List<Vector3> GetAlocatedPositions() => AlocatedPositions;
+    public List<Vector3> GetNonAlocatedPositions() => NonAlocatedPositions;
+    public bool CanSpawnBlocks(bool can) => CanSpawn = can;
+    public bool IsMoldIsland(bool im) => IsMold = im;
+    public int SetBlockAmount(int amount) => howMuchSpawn = amount;
+    public int GetBlockAmount() => howMuchSpawn;
     public List<IslandTile> GetIslandTiles() => IslandTiles;
 }
