@@ -144,7 +144,7 @@ public class IslandGenerator : MonoBehaviour
         {
             it.SetBlockType(IslandTile.BlockType.Dirt);
         }
-        else if (pos.y < -5)
+        else if (pos.y <= -5)
         {
             it.SetBlockType(IslandTile.BlockType.Rock);
         }
@@ -291,12 +291,13 @@ public class IslandGenerator : MonoBehaviour
     public void MoldIsland()
     {
         fixing = true;
-
+       
         Duplicates = FreePositions.Distinct().ToList();
 
         foreach (Vector3 p in Duplicates)
         {
             SpawnTile(p);
+           
         }
         fixing = false;
         Done = true;
@@ -306,12 +307,38 @@ public class IslandGenerator : MonoBehaviour
     /// </summary>
     public void FixIsland()
     {
+        List<IslandTile> ToRegenerate=new List<IslandTile>();
         foreach (Vector3 pos in DestroyedPositions)
         {
-            SpawnTileCalc(pos);
-            UsedPositions.Add(pos);
+            SpawnTile(pos);
+
+            RecalculateFaces(pos);
         }
+       
         DestroyedPositions.Clear();
+       
+    }
+    void RecalculateFaces(Vector3 pos)
+    {
+     
+        Vector3[] PositionsToRegenerate = CalculateNearVectorMatrix(pos, CalculateMatrixSide.all);
+
+        List<Vector3> ToRegenerateMatrix = new List<Vector3>();
+
+        foreach (Vector3 PtRpos in PositionsToRegenerate)
+        {
+            if (UsedPositions.Contains(PtRpos))
+            {
+                ToRegenerateMatrix.Add(PtRpos);
+            }
+        }
+        foreach (Vector3 trm in ToRegenerateMatrix)
+        {
+            IslandTile itg;
+            bool hasValue = IslandTilesDictionary.TryGetValue(trm, out itg); // IslandTilesDictionary[trm];
+            if (hasValue) { itg.GenerateCube(); }
+        }
+    
     }
     /// <summary>
     /// This function destroys tiles and recalculaters faces 
@@ -319,7 +346,7 @@ public class IslandGenerator : MonoBehaviour
     /// <param name="itt"></param>
     public void DestroyTileRecalculateFaces(IslandTile itt)
     {
-        DestroyTile(itt);
+        DestroyTile(itt,false);
         Vector3 pos = itt.transform.position;
         Vector3[] PositionsToRegenerate = CalculateNearVectorMatrix(pos, CalculateMatrixSide.all);
 
@@ -338,12 +365,13 @@ public class IslandGenerator : MonoBehaviour
             bool hasValue = IslandTilesDictionary.TryGetValue(trm, out itg); // IslandTilesDictionary[trm];
             if (hasValue) { itg.GenerateCube(); }
         }
+        IslandTilesDictionary.Remove(pos);
     }
     /// <summary>
     /// This function only destroys tile and do nothing to face recalculation 
     /// </summary>
     /// <param name="itt"></param>
-    public void DestroyTile(IslandTile itt)
+    public void DestroyTile(IslandTile itt,bool RemoveInDictionary=true)
     {
         IslandTile it = itt;
         Vector3 pos = it.transform.position;
@@ -352,6 +380,10 @@ public class IslandGenerator : MonoBehaviour
         IslandTiles.Remove(itt);
         Destroy(it.gameObject);
         CalculateNearVectorMatrix(pos, CalculateMatrixSide.DownForwardBackwardLeftRight, FreePositions, false);
+        if (RemoveInDictionary)
+        {
+            IslandTilesDictionary.Remove(pos);
+        }
     }
     /// <summary>
     /// This functions spawn block in current position by UsedPostions var on the START
@@ -375,7 +407,7 @@ public class IslandGenerator : MonoBehaviour
         }
         else
         {
-            Debug.LogError("Cannot spawn block in existing  position");
+            Debug.LogWarning("Cannot spawn block in existing  position");
             return null;
         }
     }
@@ -401,7 +433,7 @@ public class IslandGenerator : MonoBehaviour
         }
         else
         {
-            Debug.LogError("Cannot spawn block in existing  position");
+            Debug.LogWarning("Cannot spawn block in existing  position");
             return null;
         }
     }
@@ -427,7 +459,7 @@ public class IslandGenerator : MonoBehaviour
         }
         else
         {
-            Debug.LogError("Cannot spawn block in existing  position");
+            Debug.LogWarning("Cannot spawn block in existing  position");
             return null;
         }
     }

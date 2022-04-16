@@ -4,13 +4,15 @@ public class IslandTile : MonoBehaviour
 {
     int biomeID;
     IslandGenerator Generator;
-   
+
     public Vector3[] NearPositionMatrix = new Vector3[5];
 
     public MeshRenderer mr;
     public Mesh mesh;
     public MeshFilter meshFilter;
-    [SerializeField] Material[] IslandMaterials;
+    [SerializeField] Material[] GrassIslandMaterials;
+    [SerializeField] Material[] DirtIslandMaterials;
+    [SerializeField] Material[] RockIslandMaterials;
     public enum BlockType { Grass, Dirt, Rock };
     BlockType blockType;
     [SerializeField] float length = 1f;
@@ -21,17 +23,17 @@ public class IslandTile : MonoBehaviour
 
     void Start()
     {
-       
+
         GenerateCube();
         mr = GetComponent<MeshRenderer>();
         _cube.GetComponent<MeshRenderer>();
         meshFilter = _cube.GetComponent<MeshFilter>();
- 
+
     }
 
     public void GenerateCube()
     {
-    
+
         ///   RecalculateTrianglesFaces += IslandTile_RecalculateTrianglesFaces(ref mesh);
         //1) Create an empty GameObject with the required Components
         _cube = gameObject;
@@ -143,17 +145,17 @@ public class IslandTile : MonoBehaviour
         List<Vector3> gUsedPos = Generator.UsedPositions;
         if (Generator.UsedPositions.Contains(transform.position + Vector3.down) && Generator.UsedPositions.Contains(transform.position + Vector3.left) && Generator.UsedPositions.Contains(transform.position + Vector3.forward) && Generator.UsedPositions.Contains(transform.position + Vector3.back) && Generator.UsedPositions.Contains(transform.position + Vector3.right) && Generator.UsedPositions.Contains(transform.position + Vector3.up))
         {
-          
+
             name = "nowalls";
-            
+
 
             mesh.triangles = new int[6];
         }
         else
         {
-            List<int>Triangles=new List<int>();
+            List<int> Triangles = new List<int>();
             if (Generator.UsedPositions.Contains(transform.position + Vector3.down))//bottom
-            {}
+            { }
             else
             {
 
@@ -166,7 +168,7 @@ public class IslandTile : MonoBehaviour
                 name = name + " bottom";
             }
             if (Generator.UsedPositions.Contains(transform.position + Vector3.left))//left
-            {}
+            { }
             else
             {
                 Triangles.Add(7);
@@ -179,7 +181,7 @@ public class IslandTile : MonoBehaviour
 
             }
             if (Generator.UsedPositions.Contains(transform.position + Vector3.forward))//front  
-            {}
+            { }
             else
             {
                 Triangles.Add(11);
@@ -191,7 +193,7 @@ public class IslandTile : MonoBehaviour
                 name = name + " front";
             }
             if (Generator.UsedPositions.Contains(transform.position + Vector3.back))//back
-            {}
+            { }
             else
             {
                 Triangles.Add(15);
@@ -203,7 +205,7 @@ public class IslandTile : MonoBehaviour
                 name = name + " back";
             }
             if (Generator.UsedPositions.Contains(transform.position + Vector3.right))//right
-            {}
+            { }
             else
             {
                 Triangles.Add(19);
@@ -215,7 +217,7 @@ public class IslandTile : MonoBehaviour
                 name = name + " right";
             }
             if (Generator.UsedPositions.Contains(transform.position + Vector3.up))//top
-            {}
+            { }
             else
             {
                 Triangles.Add(23);
@@ -235,7 +237,18 @@ public class IslandTile : MonoBehaviour
     public void SetBlockType(BlockType bt)
     {
         blockType = bt;
-        mr.material = IslandMaterials[(int)bt];
+        switch (bt)
+        {
+            case BlockType.Grass:
+                mr.material = GrassIslandMaterials[Random.Range(0, GrassIslandMaterials.Length)];
+                break;
+            case BlockType.Dirt:
+                mr.material = DirtIslandMaterials[Random.Range(0, DirtIslandMaterials.Length)];
+                break;
+            case BlockType.Rock:
+                mr.material = RockIslandMaterials[Random.Range(0, RockIslandMaterials.Length)];
+                break;
+        }
     }
     public BlockType GetBlockType() => blockType;
     public void SetPositionMatrix(Vector3[] npm) => NearPositionMatrix = npm;

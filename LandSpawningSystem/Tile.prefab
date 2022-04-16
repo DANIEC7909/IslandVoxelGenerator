@@ -118,10 +118,14 @@ MonoBehaviour:
   mr: {fileID: 1526220829198723805}
   mesh: {fileID: 0}
   meshFilter: {fileID: 5172601091289383471}
-  IslandMaterials:
+  GrassIslandMaterials:
   - {fileID: 2100000, guid: 661281996fb17e548a026a4ef66ec48b, type: 2}
+  DirtIslandMaterials:
   - {fileID: 2100000, guid: 8ecac0a78ce35364ab1d83e431cfdc59, type: 2}
-  - {fileID: 2100000, guid: e8dc9ac5e6366a643a5d684d2b3f5914, type: 2}
+  - {fileID: 2100000, guid: 0ae684c30f1cf8145b76eb47ceaaa101, type: 2}
+  RockIslandMaterials:
+  - {fileID: 2100000, guid: 311eff320e2ac6e4d8b7cca97ed9555f, type: 2}
+  - {fileID: 2100000, guid: f0a37b7c63eb3434dbeef700c5fb5419, type: 2}
   length: 1
   width: 1
   height: 1
