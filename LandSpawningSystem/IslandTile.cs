@@ -143,7 +143,7 @@ public class IslandTile : MonoBehaviour
         List<Vector3> gUsedPos = Generator.UsedPositions;
         if (Generator.UsedPositions.Contains(transform.position + Vector3.down) && Generator.UsedPositions.Contains(transform.position + Vector3.left) && Generator.UsedPositions.Contains(transform.position + Vector3.forward) && Generator.UsedPositions.Contains(transform.position + Vector3.back) && Generator.UsedPositions.Contains(transform.position + Vector3.right) && Generator.UsedPositions.Contains(transform.position + Vector3.up))
         {
-            Debug.Log("No Faces"+name);
+            Debug.Log("No Faces "+name);
             name = "nowalls";
             
 
@@ -163,7 +163,7 @@ public class IslandTile : MonoBehaviour
                 Triangles.Add(3);
                 Triangles.Add(2);
                 Triangles.Add(1);
-                name = name + "bottom";
+                name = name + " bottom";
             }
             if (Generator.UsedPositions.Contains(transform.position + Vector3.left))//left
             {}
@@ -175,7 +175,7 @@ public class IslandTile : MonoBehaviour
                 Triangles.Add(7);
                 Triangles.Add(6);
                 Triangles.Add(5);
-                name = name + "left";
+                name = name + " left";
 
             }
             if (Generator.UsedPositions.Contains(transform.position + Vector3.forward))//front  
@@ -188,7 +188,7 @@ public class IslandTile : MonoBehaviour
                 Triangles.Add(11);
                 Triangles.Add(10);
                 Triangles.Add(9);
-                name = name + "front";
+                name = name + " front";
             }
             if (Generator.UsedPositions.Contains(transform.position + Vector3.back))//back
             {}
@@ -200,7 +200,7 @@ public class IslandTile : MonoBehaviour
                 Triangles.Add(15);
                 Triangles.Add(14);
                 Triangles.Add(13);
-                name = name + "back";
+                name = name + " back";
             }
             if (Generator.UsedPositions.Contains(transform.position + Vector3.right))//right
             {}
@@ -212,7 +212,7 @@ public class IslandTile : MonoBehaviour
                 Triangles.Add(19);
                 Triangles.Add(18);
                 Triangles.Add(17);
-                name = name + "right";
+                name = name + " right";
             }
             if (Generator.UsedPositions.Contains(transform.position + Vector3.up))//top
             {}
@@ -224,7 +224,7 @@ public class IslandTile : MonoBehaviour
                 Triangles.Add(23);
                 Triangles.Add(22);
                 Triangles.Add(21);
-                name = name + "top";
+                name = name + " top";
             }
             mesh.triangles = Triangles.ToArray();
         }

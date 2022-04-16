@@ -11,6 +11,7 @@ public class IslandGenerator : MonoBehaviour
     public List<Vector3> DestroyedPositions;
     public Transform PivotTransform;
     public List<IslandTile> IslandTiles = new List<IslandTile>();
+    public Dictionary<Vector3, IslandTile> IslandTilesDictionary = new Dictionary<Vector3, IslandTile>();
     [SerializeField] int howMuchSpawn;
     [SerializeField] GameObject tileGameObject;
     public bool CanSpawn = true;
@@ -39,8 +40,15 @@ public class IslandGenerator : MonoBehaviour
         {
             int posID = UnityEngine.Random.Range(0, FreePositions.Count);
             Vector3 cachedFreePos = FreePositions[posID];
-            UsedPositions.Add(cachedFreePos);
-            FreePositions.Remove(cachedFreePos);
+            if (!UsedPositions.Contains(cachedFreePos))
+            {
+                UsedPositions.Add(cachedFreePos);
+                FreePositions.Remove(cachedFreePos);
+            }
+            else
+            {
+                iterations--;
+            }
             //calculate near pos's
             CalculateNearVectorMatrix(cachedFreePos, CalculateMatrixSide.DownForwardBackwardLeftRight, FreePositions);
             iterations++;
@@ -88,20 +96,29 @@ public class IslandGenerator : MonoBehaviour
         }
         if (Input.GetKeyDown(KeyCode.R))
         {
-            foreach (IslandTile it in IslandTiles)
-            {
-                Destroy(it.gameObject);
-            }
-            IslandTiles.Clear();
-            FreePositions.Clear();
-            UsedPositions.Clear();
-            Duplicates.Clear();
-            Done = false;
-            fixing = false;
-            iterations = 0;
-            Start();
+            RegenerateIsland();
         }
         counter.text = testcontent + " " + " How much voxels to spawn " + howMuchSpawn.ToString();
+    }
+    void RegenerateIsland()
+    {
+        Clear();
+        Start();
+    }
+    void Clear()
+    {
+        foreach (IslandTile it in IslandTiles)
+        {
+            Destroy(it.gameObject);
+        }
+        IslandTiles.Clear();
+        IslandTilesDictionary.Clear();
+        FreePositions.Clear();
+        UsedPositions.Clear();
+        Duplicates.Clear();
+        Done = false;
+        fixing = false;
+        iterations = 0;
     }
     void setMaterial(IslandTile it, Vector3 pos)
     {
@@ -273,22 +290,30 @@ public class IslandGenerator : MonoBehaviour
         }
         DestroyedPositions.Clear();
     }
-    public IslandTile DestroyTile(IslandTile itt)
+    public IslandTile DestroyTileRecalculateFaces(IslandTile itt)
     {
-        IslandTile it = itt;
+        IslandTile it = DestroyTile(itt);
+
         Vector3 pos = it.transform.position;
-        DestroyedPositions.Add(pos);
-        UsedPositions.Remove(pos);
-        IslandTiles.Remove(itt);
-        Destroy(it.gameObject);
-        CalculateNearVectorMatrix(pos, CalculateMatrixSide.DownForwardBackwardLeftRight, FreePositions, false);
-        foreach (IslandTile ittt in IslandTiles)
+        Vector3[] PositionsToRegeneratePos = CalculateNearVectorMatrix(pos, CalculateMatrixSide.all);
+        List<Vector3> ToRegenerateMatrix = new List<Vector3>();
+        foreach (Vector3 PtRpos in PositionsToRegeneratePos)
         {
-            ittt.GenerateCube();
+            if (UsedPositions.Contains(PtRpos))
+            {
+                ToRegenerateMatrix.Add(PtRpos);
+            }
         }
+        foreach (Vector3 trm in ToRegenerateMatrix)
+        {
+            IslandTile itg;
+            bool hasValue = IslandTilesDictionary.TryGetValue(trm, out itg); // IslandTilesDictionary[trm];
+            if (hasValue) itg.GenerateCube();
+        }
+
         return it;
     }
-    public IslandTile DestroyTileNoRecalculateFaces(IslandTile itt)
+    public IslandTile DestroyTile(IslandTile itt)
     {
         IslandTile it = itt;
         Vector3 pos = it.transform.position;
@@ -305,6 +330,11 @@ public class IslandGenerator : MonoBehaviour
 
 
         IslandTiles.Add(it);
+        if (IslandTilesDictionary.ContainsKey(pos))
+        {
+            IslandTilesDictionary.Add(pos, it);
+        }
+
         setMaterial(it, pos);
         it.SetPositionMatrix(CalculateNearVectorMatrix(pos, CalculateMatrixSide.DownForwardBackwardLeftRight));
         it.SetGeneratorInstance(this);
@@ -317,6 +347,7 @@ public class IslandGenerator : MonoBehaviour
         UsedPositions.Add(it.transform.position);
         it.SetGeneratorInstance(this);
         IslandTiles.Add(it);
+        IslandTilesDictionary.Add(pos, it);
         setMaterial(it, pos);
         it.SetPositionMatrix(CalculateNearVectorMatrix(pos, CalculateMatrixSide.DownForwardBackwardLeftRight));
         return it;
@@ -334,11 +365,15 @@ public class IslandGenerator : MonoBehaviour
         UsedPositions.Add(it.transform.position);
         it.SetGeneratorInstance(this);
         IslandTiles.Add(it);
+        Vector3 pos = it.transform.position;
+        IslandTilesDictionary.Add(pos, it);
         it.SetPositionMatrix(CalculateNearVectorMatrix(it.transform.position, CalculateMatrixSide.DownForwardBackwardLeftRight));
         return it;
     }
     public List<IslandTile> GetIslandTiles() => IslandTiles;
 
 }
+
+
 
 
