@@ -95,7 +95,7 @@ BoxCollider:
   m_Enabled: 1
   serializedVersion: 2
   m_Size: {x: 1, y: 1, z: 1}
-  m_Center: {x: 0.5, y: 0.5, z: 0.5}
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &95040572362384857
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -116,7 +116,12 @@ MonoBehaviour:
   - {x: 0, y: 0, z: 0}
   - {x: 0, y: 0, z: 0}
   mr: {fileID: 1526220829198723805}
+  mesh: {fileID: 0}
+  meshFilter: {fileID: 5172601091289383471}
   IslandMaterials:
   - {fileID: 2100000, guid: 661281996fb17e548a026a4ef66ec48b, type: 2}
   - {fileID: 2100000, guid: 8ecac0a78ce35364ab1d83e431cfdc59, type: 2}
   - {fileID: 2100000, guid: e8dc9ac5e6366a643a5d684d2b3f5914, type: 2}
+  length: 1
+  width: 1
+  height: 1

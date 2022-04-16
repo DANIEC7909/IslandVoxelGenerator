@@ -79,6 +79,13 @@ public class IslandGenerator : MonoBehaviour
         {
             howMuchSpawn -= 500;
         }
+        if (Input.GetKeyDown(KeyCode.H))
+        {
+            foreach (IslandTile it in IslandTiles)
+            {
+                it.GenerateCube();
+            }
+        }
         if (Input.GetKeyDown(KeyCode.R))
         {
             foreach (IslandTile it in IslandTiles)
@@ -271,6 +278,22 @@ public class IslandGenerator : MonoBehaviour
         IslandTile it = itt;
         Vector3 pos = it.transform.position;
         DestroyedPositions.Add(pos);
+        UsedPositions.Remove(pos);
+        IslandTiles.Remove(itt);
+        Destroy(it.gameObject);
+        CalculateNearVectorMatrix(pos, CalculateMatrixSide.DownForwardBackwardLeftRight, FreePositions, false);
+        foreach (IslandTile ittt in IslandTiles)
+        {
+            ittt.GenerateCube();
+        }
+        return it;
+    }
+    public IslandTile DestroyTileNoRecalculateFaces(IslandTile itt)
+    {
+        IslandTile it = itt;
+        Vector3 pos = it.transform.position;
+        DestroyedPositions.Add(pos);
+        UsedPositions.Remove(pos);
         IslandTiles.Remove(itt);
         Destroy(it.gameObject);
         CalculateNearVectorMatrix(pos, CalculateMatrixSide.DownForwardBackwardLeftRight, FreePositions, false);

@@ -4,14 +4,7 @@ public class IslandTile : MonoBehaviour
 {
     int biomeID;
     IslandGenerator Generator;
-    Vector3 cashedPos;
-    /// <summary>
-    /// 0-backward
-    /// 1-forward
-    /// 2-right
-    /// 3-left
-    /// 4-up
-    /// </summary>
+   
     public Vector3[] NearPositionMatrix = new Vector3[5];
 
     public MeshRenderer mr;
@@ -28,13 +21,20 @@ public class IslandTile : MonoBehaviour
 
     void Start()
     {
-        cashedPos = transform.position;
-
+       
+        GenerateCube();
         mr = GetComponent<MeshRenderer>();
-        //1) Create an empty GameObject with the required Components
-        _cube = gameObject;
         _cube.GetComponent<MeshRenderer>();
         meshFilter = _cube.GetComponent<MeshFilter>();
+ 
+    }
+
+    public void GenerateCube()
+    {
+    
+        ///   RecalculateTrianglesFaces += IslandTile_RecalculateTrianglesFaces(ref mesh);
+        //1) Create an empty GameObject with the required Components
+        _cube = gameObject;
         mesh = meshFilter.mesh;
 
 
@@ -114,104 +114,124 @@ public class IslandTile : MonoBehaviour
         //IMPORTANT: Unity uses a 'Clockwise Winding Order' for determining front-facing polygons.
         //This means that a polygon's vertices must be defined in 
         //a clockwise order (relative to the camera) in order to be rendered/visible.
-     /*   int[] triangles = new int[]
-        {
-            3, 1, 0,        3, 2, 1,        // Bottom	
-	         7, 5, 4,        7, 6, 5,        // Left
-	        11, 9, 8,       11, 10, 9,      // Front
-	        15, 13, 12,     15, 14, 13,     // Back
-	        19, 17, 16,     19, 18, 17,	    // Right
-	        23, 21, 20,     23, 22, 21,	    // Top
-        };
-*/
+        /*   int[] triangles = new int[]
+           {
+               3, 1, 0,        3, 2, 1,        // Bottom	
+                7, 5, 4,        7, 6, 5,        // Left
+               11, 9, 8,       11, 10, 9,      // Front
+               15, 13, 12,     15, 14, 13,     // Back
+               19, 17, 16,     19, 18, 17,	    // Right
+               23, 21, 20,     23, 22, 21,	    // Top
+           };
+   */
 
         //8) Build the Mesh
         mesh.Clear();
         mesh.vertices = vertices;
         // mesh.triangles = triangles;
-        RecalculateFaces(mesh);
+        RecalculateFaces(ref mesh);
         mesh.normals = normals;
         mesh.uv = uvs;
         mesh.Optimize();
         //   mesh.RecalculateNormals();
 
 
-
     }
-    void RecalculateFaces(Mesh mesh)
+
+    void RecalculateFaces(ref Mesh mesh)
     {
         List<Vector3> gUsedPos = Generator.UsedPositions;
-        foreach (Vector3 pos in gUsedPos)
+        if (Generator.UsedPositions.Contains(transform.position + Vector3.down) && Generator.UsedPositions.Contains(transform.position + Vector3.left) && Generator.UsedPositions.Contains(transform.position + Vector3.forward) && Generator.UsedPositions.Contains(transform.position + Vector3.back) && Generator.UsedPositions.Contains(transform.position + Vector3.right) && Generator.UsedPositions.Contains(transform.position + Vector3.up))
         {
-       
-            if (NearPositionMatrix[0] == pos)//backward{
-            {
-                int[] triangles = new int[]
-                 {
-            3, 1, 0,        3, 2, 1,        // Bottom	
-	         7, 5, 4,        7, 6, 5,        // Left
-	        11, 9, 8,       11, 10, 9,      // Front
-	       
-	        19, 17, 16,     19, 18, 17,	    // Right
-	        23, 21, 20,     23, 22, 21,     // Top
-                 };
-                mesh.triangles = triangles;
-            }
-            if (NearPositionMatrix[1] == pos)//forward{
-            {
-                int[] triangles = new int[]
-                {
-            3, 1, 0,        3, 2, 1,        // Bottom	
-	         7, 5, 4,        7, 6, 5,        // Left
-	       
-	        15, 13, 12,     15, 14, 13,     // Back
-	        19, 17, 16,     19, 18, 17,	    // Right
-	        23, 21, 20,     23, 22, 21,     // Top
-                };
-                mesh.triangles = triangles;
-            }
-            if (NearPositionMatrix[2] == pos)//right{
-            {
-                int[] triangles = new int[]
-                {
-            3, 1, 0,        3, 2, 1,        // Bottom	
-	         7, 5, 4,        7, 6, 5,        // Left
-	        11, 9, 8,       11, 10, 9,      // Front
-	        15, 13, 12,     15, 14, 13,     // Back
-	        
-	        23, 21, 20,     23, 22, 21,     // Top
-                };
-                mesh.triangles = triangles;
-            }
-            if (NearPositionMatrix[3] == pos)//left{
-            {
-                int[] triangles = new int[]
-                {    
-            3, 1, 0,        3, 2, 1,        // Bottom	
+            Debug.Log("No Faces"+name);
+            name = "nowalls";
+            
 
-	        11, 9, 8,       11, 10, 9,      // Front
-	        15, 13, 12,     15, 14, 13,     // Back
-	        19, 17, 16,     19, 18, 17,	    // Right
-	        23, 21, 20,     23, 22, 21,     // Top
-                };
-                mesh.triangles = triangles;
-            }
-            if (NearPositionMatrix[4] == pos)//up{
-            {
-                int[] triangles = new int[]
-                {
-            3, 1, 0,        3, 2, 1,        // Bottom	
-	         7, 5, 4,        7, 6, 5,        // Left
-	        11, 9, 8,       11, 10, 9,      // Front
-	        15, 13, 12,     15, 14, 13,     // Back
-	        19, 17, 16,     19, 18, 17,	    // Right
-	       
-                };
-                mesh.triangles = triangles;
-            }
+            mesh.triangles = new int[6];
         }
-    
+        else
+        {
+            List<int>Triangles=new List<int>();
+            if (Generator.UsedPositions.Contains(transform.position + Vector3.down))//bottom
+            {}
+            else
+            {
+
+                Triangles.Add(3);
+                Triangles.Add(1);
+                Triangles.Add(0);
+                Triangles.Add(3);
+                Triangles.Add(2);
+                Triangles.Add(1);
+                name = name + "bottom";
+            }
+            if (Generator.UsedPositions.Contains(transform.position + Vector3.left))//left
+            {}
+            else
+            {
+                Triangles.Add(7);
+                Triangles.Add(5);
+                Triangles.Add(4);
+                Triangles.Add(7);
+                Triangles.Add(6);
+                Triangles.Add(5);
+                name = name + "left";
+
+            }
+            if (Generator.UsedPositions.Contains(transform.position + Vector3.forward))//front  
+            {}
+            else
+            {
+                Triangles.Add(11);
+                Triangles.Add(9);
+                Triangles.Add(8);
+                Triangles.Add(11);
+                Triangles.Add(10);
+                Triangles.Add(9);
+                name = name + "front";
+            }
+            if (Generator.UsedPositions.Contains(transform.position + Vector3.back))//back
+            {}
+            else
+            {
+                Triangles.Add(15);
+                Triangles.Add(13);
+                Triangles.Add(12);
+                Triangles.Add(15);
+                Triangles.Add(14);
+                Triangles.Add(13);
+                name = name + "back";
+            }
+            if (Generator.UsedPositions.Contains(transform.position + Vector3.right))//right
+            {}
+            else
+            {
+                Triangles.Add(19);
+                Triangles.Add(17);
+                Triangles.Add(16);
+                Triangles.Add(19);
+                Triangles.Add(18);
+                Triangles.Add(17);
+                name = name + "right";
+            }
+            if (Generator.UsedPositions.Contains(transform.position + Vector3.up))//top
+            {}
+            else
+            {
+                Triangles.Add(23);
+                Triangles.Add(21);
+                Triangles.Add(20);
+                Triangles.Add(23);
+                Triangles.Add(22);
+                Triangles.Add(21);
+                name = name + "top";
+            }
+            mesh.triangles = Triangles.ToArray();
+        }
+
     }
+
+
     public void SetBlockType(BlockType bt)
     {
         blockType = bt;
