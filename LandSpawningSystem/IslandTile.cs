@@ -143,7 +143,7 @@ public class IslandTile : MonoBehaviour
         List<Vector3> gUsedPos = Generator.UsedPositions;
         if (Generator.UsedPositions.Contains(transform.position + Vector3.down) && Generator.UsedPositions.Contains(transform.position + Vector3.left) && Generator.UsedPositions.Contains(transform.position + Vector3.forward) && Generator.UsedPositions.Contains(transform.position + Vector3.back) && Generator.UsedPositions.Contains(transform.position + Vector3.right) && Generator.UsedPositions.Contains(transform.position + Vector3.up))
         {
-            Debug.Log("No Faces "+name);
+          
             name = "nowalls";
             
 

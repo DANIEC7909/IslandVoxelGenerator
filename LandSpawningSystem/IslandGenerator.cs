@@ -15,6 +15,7 @@ public class IslandGenerator : MonoBehaviour
     [SerializeField] int howMuchSpawn;
     [SerializeField] GameObject tileGameObject;
     public bool CanSpawn = true;
+    public bool IsMold = true;
     int iterations;
     [SerializeField] TextMeshProUGUI counter;
     string testcontent;
@@ -44,21 +45,32 @@ public class IslandGenerator : MonoBehaviour
             {
                 UsedPositions.Add(cachedFreePos);
                 FreePositions.Remove(cachedFreePos);
+                CalculateNearVectorMatrix(cachedFreePos, CalculateMatrixSide.DownForwardBackwardLeftRight, FreePositions);
             }
             else
             {
+                FreePositions.Remove(cachedFreePos);
                 iterations--;
             }
             //calculate near pos's
-            CalculateNearVectorMatrix(cachedFreePos, CalculateMatrixSide.DownForwardBackwardLeftRight, FreePositions);
             iterations++;
+        }
+        foreach (Vector3 dup in UsedPositions)
+        {
+            for (int i = 0; i < FreePositions.Count; i++)
+            {
+                if (dup == FreePositions[i])
+                {
+                    FreePositions.Remove(dup);
+                }
+            }
         }
 
         foreach (Vector3 pos in UsedPositions)
         {
             SpawnTileCalc(pos);
         }
-        MoldIsland();
+        if (IsMold) MoldIsland();
 
         timer.Stop();
         System.TimeSpan timeTaken = timer.Elapsed;
@@ -71,14 +83,13 @@ public class IslandGenerator : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.T))
         {
-            SpawnTile();
+            SpawnTileRandom();
             MoldIsland();
         }
         if (Input.GetKeyDown(KeyCode.F))
         {
             FixIsland();
         }
-
         if (Input.GetKeyDown(KeyCode.Q))
         {
             howMuchSpawn += 500;
@@ -100,7 +111,10 @@ public class IslandGenerator : MonoBehaviour
         }
         counter.text = testcontent + " " + " How much voxels to spawn " + howMuchSpawn.ToString();
     }
-    void RegenerateIsland()
+    /// <summary>
+    /// Regenerates Island
+    /// </summary>
+  public void RegenerateIsland()
     {
         Clear();
         Start();
@@ -136,6 +150,7 @@ public class IslandGenerator : MonoBehaviour
         }
     }
     /// <summary>
+    /// Calculates adjacent blocks positions.
     /// Returned Vector[] description
     /// 0-backward
     /// 1-forward
@@ -193,10 +208,10 @@ public class IslandGenerator : MonoBehaviour
                 nPos[5] = pos + Vector3.up;
                 break;
         }
-
         return nPos;
     }
     /// <summary>
+    /// Calculates adjacent blocks positions and Removes or Adds it to desired lsits
     /// Returned Vector[] description
     /// 0-backward
     /// 1-forward
@@ -270,17 +285,25 @@ public class IslandGenerator : MonoBehaviour
         }
         return nPos;
     }
+    /// <summary>
+    /// This function makes islands looks pretier(Fills empty cubes).
+    /// </summary>
     public void MoldIsland()
     {
         fixing = true;
 
         Duplicates = FreePositions.Distinct().ToList();
+
         foreach (Vector3 p in Duplicates)
         {
             SpawnTile(p);
         }
+        fixing = false;
         Done = true;
     }
+    /// <summary>
+    /// This function fixes island based on DestroyedPostions Matrix.
+    /// </summary>
     public void FixIsland()
     {
         foreach (Vector3 pos in DestroyedPositions)
@@ -290,14 +313,19 @@ public class IslandGenerator : MonoBehaviour
         }
         DestroyedPositions.Clear();
     }
-    public IslandTile DestroyTileRecalculateFaces(IslandTile itt)
+    /// <summary>
+    /// This function destroys tiles and recalculaters faces 
+    /// </summary>
+    /// <param name="itt"></param>
+    public void DestroyTileRecalculateFaces(IslandTile itt)
     {
-        IslandTile it = DestroyTile(itt);
+        DestroyTile(itt);
+        Vector3 pos = itt.transform.position;
+        Vector3[] PositionsToRegenerate = CalculateNearVectorMatrix(pos, CalculateMatrixSide.all);
 
-        Vector3 pos = it.transform.position;
-        Vector3[] PositionsToRegeneratePos = CalculateNearVectorMatrix(pos, CalculateMatrixSide.all);
         List<Vector3> ToRegenerateMatrix = new List<Vector3>();
-        foreach (Vector3 PtRpos in PositionsToRegeneratePos)
+
+        foreach (Vector3 PtRpos in PositionsToRegenerate)
         {
             if (UsedPositions.Contains(PtRpos))
             {
@@ -308,12 +336,14 @@ public class IslandGenerator : MonoBehaviour
         {
             IslandTile itg;
             bool hasValue = IslandTilesDictionary.TryGetValue(trm, out itg); // IslandTilesDictionary[trm];
-            if (hasValue) itg.GenerateCube();
+            if (hasValue) { itg.GenerateCube(); }
         }
-
-        return it;
     }
-    public IslandTile DestroyTile(IslandTile itt)
+    /// <summary>
+    /// This function only destroys tile and do nothing to face recalculation 
+    /// </summary>
+    /// <param name="itt"></param>
+    public void DestroyTile(IslandTile itt)
     {
         IslandTile it = itt;
         Vector3 pos = it.transform.position;
@@ -322,58 +352,84 @@ public class IslandGenerator : MonoBehaviour
         IslandTiles.Remove(itt);
         Destroy(it.gameObject);
         CalculateNearVectorMatrix(pos, CalculateMatrixSide.DownForwardBackwardLeftRight, FreePositions, false);
-        return it;
     }
-    public IslandTile SpawnTileCalc(Vector3 pos)
+    /// <summary>
+    /// This functions spawn block in current position by UsedPostions var on the START
+    /// IMPORTANT: This function didn't adds object to usedPosMatrix and didn't removes block from FreePositonsMatrix
+    /// </summary>
+    /// <param name="pos"></param>
+    /// <returns></returns>
+    private IslandTile SpawnTileCalc(Vector3 pos)
     {
-        IslandTile it = Instantiate(tileGameObject, pos, Quaternion.identity).GetComponent<IslandTile>();
-
-
-        IslandTiles.Add(it);
-        if (IslandTilesDictionary.ContainsKey(pos))
+        if (!IslandTilesDictionary.ContainsKey(pos))
         {
+            IslandTile it = Instantiate(tileGameObject, pos, Quaternion.identity).GetComponent<IslandTile>();
+            //  it.gameObject.transform.SetParent(gameObject.transform);
+            IslandTiles.Add(it);
             IslandTilesDictionary.Add(pos, it);
-        }
 
-        setMaterial(it, pos);
-        it.SetPositionMatrix(CalculateNearVectorMatrix(pos, CalculateMatrixSide.DownForwardBackwardLeftRight));
-        it.SetGeneratorInstance(this);
-        return it;
+            setMaterial(it, pos);
+            it.SetPositionMatrix(CalculateNearVectorMatrix(pos, CalculateMatrixSide.DownForwardBackwardLeftRight));
+            it.SetGeneratorInstance(this);
+            return it;
+        }
+        else
+        {
+            Debug.LogError("Cannot spawn block in existing  position");
+            return null;
+        }
     }
+    /// <summary>
+    /// This function spawn block in desired position by pos position 
+    /// </summary>
+    /// <param name="pos"></param>
+    /// <returns></returns>
     public IslandTile SpawnTile(Vector3 pos)
     {
-        IslandTile it = Instantiate(tileGameObject, pos, Quaternion.identity).GetComponent<IslandTile>();
-        FreePositions.Remove(pos);
-        UsedPositions.Add(it.transform.position);
-        it.SetGeneratorInstance(this);
-        IslandTiles.Add(it);
-        IslandTilesDictionary.Add(pos, it);
-        setMaterial(it, pos);
-        it.SetPositionMatrix(CalculateNearVectorMatrix(pos, CalculateMatrixSide.DownForwardBackwardLeftRight));
-        return it;
+        if (!IslandTilesDictionary.ContainsKey(pos))
+        {
+            IslandTile it = Instantiate(tileGameObject, pos, Quaternion.identity).GetComponent<IslandTile>();
+            FreePositions.Remove(pos);
+            UsedPositions.Add(it.transform.position);
+            IslandTiles.Add(it);
+            IslandTilesDictionary.Add(pos, it);
+
+            setMaterial(it, pos);
+            it.SetPositionMatrix(CalculateNearVectorMatrix(pos, CalculateMatrixSide.DownForwardBackwardLeftRight));
+            it.SetGeneratorInstance(this);
+            return it;
+        }
+        else
+        {
+            Debug.LogError("Cannot spawn block in existing  position");
+            return null;
+        }
     }
-    public IslandTile SpawnTile()
+    public IslandTile SpawnTileRandom()
     {
         int id = UnityEngine.Random.Range(0, FreePositions.Count);
         while (FreePositions[id].y > 0)
         {
             id = UnityEngine.Random.Range(0, FreePositions.Count);
         }
-        IslandTile it = Instantiate(tileGameObject, FreePositions[id], Quaternion.identity).GetComponent<IslandTile>();
-        setMaterial(it, FreePositions[id]);
-        FreePositions.Remove(FreePositions[id]);
-        UsedPositions.Add(it.transform.position);
-        it.SetGeneratorInstance(this);
-        IslandTiles.Add(it);
-        Vector3 pos = it.transform.position;
-        IslandTilesDictionary.Add(pos, it);
-        it.SetPositionMatrix(CalculateNearVectorMatrix(it.transform.position, CalculateMatrixSide.DownForwardBackwardLeftRight));
-        return it;
+        if (!IslandTilesDictionary.ContainsKey(FreePositions[id]))
+        {
+            IslandTile it = Instantiate(tileGameObject, FreePositions[id], Quaternion.identity).GetComponent<IslandTile>();
+            setMaterial(it, FreePositions[id]);
+            FreePositions.Remove(FreePositions[id]);
+            UsedPositions.Add(it.transform.position);
+            it.SetGeneratorInstance(this);
+            IslandTiles.Add(it);
+            Vector3 pos = it.transform.position;
+            IslandTilesDictionary.Add(pos, it);
+            it.SetPositionMatrix(CalculateNearVectorMatrix(it.transform.position, CalculateMatrixSide.DownForwardBackwardLeftRight));
+            return it;
+        }
+        else
+        {
+            Debug.LogError("Cannot spawn block in existing  position");
+            return null;
+        }
     }
     public List<IslandTile> GetIslandTiles() => IslandTiles;
-
 }
-
-
-
-
