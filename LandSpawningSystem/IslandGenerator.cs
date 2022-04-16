@@ -1,6 +1,4 @@
-
 using System.Collections.Generic;
-
 using System.Linq;
 using UnityEngine;
 public class IslandGenerator : MonoBehaviour
@@ -49,9 +47,9 @@ public class IslandGenerator : MonoBehaviour
                 NonAlocatedPositions.Remove(cachedFreePos);
                 iterations--;
             }
-            //calculate near pos's
             iterations++;
         }
+        //cleanup dupes
         foreach (Vector3 dup in AlocatedPositions)
         {
             for (int i = 0; i < NonAlocatedPositions.Count; i++)
@@ -62,7 +60,7 @@ public class IslandGenerator : MonoBehaviour
                 }
             }
         }
-
+        //spawn cubes by generated pos Matrix
         foreach (Vector3 pos in AlocatedPositions)
         {
             SpawnTileCalc(pos);
@@ -71,11 +69,7 @@ public class IslandGenerator : MonoBehaviour
 
         timer.Stop();
         timeTaken = timer.Elapsed;
-        UnityEngine.Debug.Log("Island Generation taken: " + timeTaken.TotalSeconds + "s");
-
     }
-
-
     /// <summary>
     /// Regenerates Island
     /// </summary>

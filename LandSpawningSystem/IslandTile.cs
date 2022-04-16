@@ -7,9 +7,9 @@ public class IslandTile : MonoBehaviour
 
     public Vector3[] NearPositionMatrix = new Vector3[5];
 
-    public MeshRenderer mr;
-    public Mesh mesh;
-    public MeshFilter meshFilter;
+    [SerializeField] MeshRenderer mr;
+    [SerializeField] Mesh mesh;
+    [SerializeField] MeshFilter meshFilter;
     [SerializeField] Material[] GrassIslandMaterials;
     [SerializeField] Material[] DirtIslandMaterials;
     [SerializeField] Material[] RockIslandMaterials;
@@ -33,20 +33,9 @@ public class IslandTile : MonoBehaviour
 
     public void GenerateCube()
     {
-
-        ///   RecalculateTrianglesFaces += IslandTile_RecalculateTrianglesFaces(ref mesh);
-        //1) Create an empty GameObject with the required Components
         _cube = gameObject;
         mesh = meshFilter.mesh;
 
-
-        //Create a 'Cube' mesh...
-
-        //2) Define the cube's dimensions
-
-
-
-        //3) Define the co-ordinates of each Corner of the cube 
         Vector3[] c = new Vector3[8];
 
         c[0] = new Vector3(-length * .5f, -width * .5f, height * .5f);
@@ -58,12 +47,7 @@ public class IslandTile : MonoBehaviour
         c[5] = new Vector3(length * .5f, width * .5f, height * .5f);
         c[6] = new Vector3(length * .5f, width * .5f, -height * .5f);
         c[7] = new Vector3(-length * .5f, width * .5f, -height * .5f);
-
-
-        //4) Define the vertices that the cube is composed of:
-        //I have used 16 vertices (4 vertices per side). 
-        //This is because I want the vertices of each side to have separate normals.
-        //(so the object renders light/shade correctly) 
+ 
         Vector3[] vertices = new Vector3[]
         {
             c[0], c[1], c[2], c[3], // Bottom
@@ -74,15 +58,12 @@ public class IslandTile : MonoBehaviour
 	        c[7], c[6], c[5], c[4]  // Top
         };
 
-
-        //5) Define each vertex's Normal
         Vector3 up = Vector3.up;
         Vector3 down = Vector3.down;
         Vector3 forward = Vector3.forward;
         Vector3 back = Vector3.back;
         Vector3 left = Vector3.left;
         Vector3 right = Vector3.right;
-
 
         Vector3[] normals = new Vector3[]
         {
@@ -94,8 +75,6 @@ public class IslandTile : MonoBehaviour
 	        up, up, up, up	                    // Top
         };
 
-
-        //6) Define each vertex's UV co-ordinates
         Vector2 uv00 = new Vector2(0f, 0f);
         Vector2 uv10 = new Vector2(1f, 0f);
         Vector2 uv01 = new Vector2(0f, 1f);
@@ -112,22 +91,6 @@ public class IslandTile : MonoBehaviour
         };
 
 
-        //7) Define the Polygons (triangles) that make up the our Mesh (cube)
-        //IMPORTANT: Unity uses a 'Clockwise Winding Order' for determining front-facing polygons.
-        //This means that a polygon's vertices must be defined in 
-        //a clockwise order (relative to the camera) in order to be rendered/visible.
-        /*   int[] triangles = new int[]
-           {
-               3, 1, 0,        3, 2, 1,        // Bottom	
-                7, 5, 4,        7, 6, 5,        // Left
-               11, 9, 8,       11, 10, 9,      // Front
-               15, 13, 12,     15, 14, 13,     // Back
-               19, 17, 16,     19, 18, 17,	    // Right
-               23, 21, 20,     23, 22, 21,	    // Top
-           };
-   */
-
-        //8) Build the Mesh
         mesh.Clear();
         mesh.vertices = vertices;
         // mesh.triangles = triangles;
@@ -145,9 +108,7 @@ public class IslandTile : MonoBehaviour
         List<Vector3> gUsedPos = Generator.AlocatedPositions;
         if (Generator.AlocatedPositions.Contains(transform.position + Vector3.down) && Generator.AlocatedPositions.Contains(transform.position + Vector3.left) && Generator.AlocatedPositions.Contains(transform.position + Vector3.forward) && Generator.AlocatedPositions.Contains(transform.position + Vector3.back) && Generator.AlocatedPositions.Contains(transform.position + Vector3.right) && Generator.AlocatedPositions.Contains(transform.position + Vector3.up))
         {
-
             name = "nowalls";
-
 
             mesh.triangles = new int[6];
         }
@@ -232,7 +193,6 @@ public class IslandTile : MonoBehaviour
         }
 
     }
-
 
     public void SetBlockType(BlockType bt)
     {
