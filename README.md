@@ -1,5 +1,5 @@
 # Voxel Island Generator
-## This branch is devoted to faster / more efficient island generation
+
 ![fastgeneration](https://user-images.githubusercontent.com/46851343/162332950-5d589c96-8a1e-461a-a867-0665fc605c16.gif)
 
 
