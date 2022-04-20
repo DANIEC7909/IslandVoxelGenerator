@@ -21,7 +21,7 @@ public class IslandGenerator : MonoBehaviour
     int iterations;
     public enum CalculateMatrixSide { left, right, forward, backward, up, down, DownForwardBackwardLeftRight, all }
     public System.TimeSpan timeTaken { get; private set; }
-
+    bool b = false;
     private void Start()
     {
         var timer = new System.Diagnostics.Stopwatch();
@@ -69,6 +69,39 @@ public class IslandGenerator : MonoBehaviour
 
         timer.Stop();
         timeTaken = timer.Elapsed;
+
+
+
+        
+    }
+    private void LateUpdate()
+    {
+        //TESTING 
+        if (b == false)
+        {
+            List<MeshFilter> meshFilterss = new List<MeshFilter>();
+            foreach (IslandTile it in IslandTiles)
+            {
+                meshFilterss.Add(it.GetComponent<MeshFilter>());
+            }
+            MeshFilter[] meshFilters = meshFilterss.ToArray();
+            CombineInstance[] combine = new CombineInstance[meshFilters.Length];
+
+            int im = 0;
+            while (im < meshFilters.Length)
+            {
+                combine[im].mesh = meshFilters[im].sharedMesh;
+                combine[im].transform = meshFilters[im].transform.localToWorldMatrix;
+               
+               meshFilters[im].GetComponent<MeshRenderer>().enabled = false;
+
+                im++;
+            }
+            transform.GetComponent<MeshFilter>().mesh = new Mesh();
+            transform.GetComponent<MeshFilter>().mesh.CombineMeshes(combine);
+          //  transform.gameObject.SetActive(true);
+            b = true;
+        }
     }
     /// <summary>
     /// Regenerates Island

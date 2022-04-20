@@ -28,7 +28,7 @@ public class IslandTile : MonoBehaviour
         mr = GetComponent<MeshRenderer>();
         _cube.GetComponent<MeshRenderer>();
         meshFilter = _cube.GetComponent<MeshFilter>();
-
+        gameObject.isStatic = true;
     }
 
     public void GenerateCube()
@@ -210,6 +210,7 @@ public class IslandTile : MonoBehaviour
                 break;
         }
     }
+  
     public BlockType GetBlockType() => blockType;
     public void SetPositionMatrix(Vector3[] npm) => NearPositionMatrix = npm;
     public void SetGeneratorInstance(IslandGenerator ig) => Generator = ig;
