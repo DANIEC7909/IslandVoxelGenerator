@@ -49,7 +49,7 @@ MeshRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5543191949104355766}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
@@ -61,7 +61,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: e8dc9ac5e6366a643a5d684d2b3f5914, type: 2}
+  - {fileID: 2100000, guid: 2f3fc18c8246efd4da62b9fda5fe59f8, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -116,6 +116,7 @@ MonoBehaviour:
   length: 1
   width: 1
   height: 1
+  TileCollider: {fileID: 4098253430044294243}
 --- !u!65 &4098253430044294243
 BoxCollider:
   m_ObjectHideFlags: 0

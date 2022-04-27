@@ -43,7 +43,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 72f530bb7e5610a4684b33b7cdc6aec3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  FreePositions: []
-  UsedPositions: []
+  NonAlocatedPositions: []
+  AlocatedPositions: []
+  DestroyedPositions: []
+  Duplicates: []
+  PivotTransform: {fileID: 0}
   IslandTiles: []
+  howMuchSpawn: 0
   tileGameObject: {fileID: 5543191949104355766, guid: a05907fb65e9be54984ff84ff33f59bc, type: 3}
+  CanSpawn: 1
+  IsMold: 1
+  Grass: {fileID: 2100000, guid: 661281996fb17e548a026a4ef66ec48b, type: 2}
+  Dirt: {fileID: 2100000, guid: 8ecac0a78ce35364ab1d83e431cfdc59, type: 2}
+  Rock: {fileID: 2100000, guid: f0a37b7c63eb3434dbeef700c5fb5419, type: 2}

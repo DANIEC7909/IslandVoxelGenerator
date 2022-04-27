@@ -18,6 +18,7 @@ public class IslandTile : MonoBehaviour
     [SerializeField] float length = 1f;
     [SerializeField] float width = 1f;
     [SerializeField] float height = 1f;
+    [SerializeField]BoxCollider TileCollider;
     GameObject _cube;
 
 
@@ -29,6 +30,7 @@ public class IslandTile : MonoBehaviour
         _cube.GetComponent<MeshRenderer>();
         meshFilter = _cube.GetComponent<MeshFilter>();
         gameObject.isStatic = true;
+       // TileCollider.GetComponent<BoxCollider>();
     }
 
     public void GenerateCube()
@@ -109,7 +111,7 @@ public class IslandTile : MonoBehaviour
         if (Generator.AlocatedPositions.Contains(transform.position + Vector3.down) && Generator.AlocatedPositions.Contains(transform.position + Vector3.left) && Generator.AlocatedPositions.Contains(transform.position + Vector3.forward) && Generator.AlocatedPositions.Contains(transform.position + Vector3.back) && Generator.AlocatedPositions.Contains(transform.position + Vector3.right) && Generator.AlocatedPositions.Contains(transform.position + Vector3.up))
         {
             name = "nowalls";
-
+            TileCollider.enabled = false;
             mesh.triangles = new int[6];
         }
         else
@@ -127,6 +129,7 @@ public class IslandTile : MonoBehaviour
                 Triangles.Add(2);
                 Triangles.Add(1);
                 name = name + " bottom";
+                TileCollider.enabled = true;
             }
             if (Generator.AlocatedPositions.Contains(transform.position + Vector3.left))//left
             { }
@@ -139,6 +142,7 @@ public class IslandTile : MonoBehaviour
                 Triangles.Add(6);
                 Triangles.Add(5);
                 name = name + " left";
+                TileCollider.enabled = true;
 
             }
             if (Generator.AlocatedPositions.Contains(transform.position + Vector3.forward))//front  
@@ -152,6 +156,7 @@ public class IslandTile : MonoBehaviour
                 Triangles.Add(10);
                 Triangles.Add(9);
                 name = name + " front";
+                TileCollider.enabled = true;
             }
             if (Generator.AlocatedPositions.Contains(transform.position + Vector3.back))//back
             { }
@@ -164,6 +169,7 @@ public class IslandTile : MonoBehaviour
                 Triangles.Add(14);
                 Triangles.Add(13);
                 name = name + " back";
+                TileCollider.enabled = true;
             }
             if (Generator.AlocatedPositions.Contains(transform.position + Vector3.right))//right
             { }
@@ -176,6 +182,7 @@ public class IslandTile : MonoBehaviour
                 Triangles.Add(18);
                 Triangles.Add(17);
                 name = name + " right";
+                TileCollider.enabled = true;
             }
             if (Generator.AlocatedPositions.Contains(transform.position + Vector3.up))//top
             { }
@@ -188,6 +195,7 @@ public class IslandTile : MonoBehaviour
                 Triangles.Add(22);
                 Triangles.Add(21);
                 name = name + " top";
+                TileCollider.enabled = true;
             }
             mesh.triangles = Triangles.ToArray();
         }
