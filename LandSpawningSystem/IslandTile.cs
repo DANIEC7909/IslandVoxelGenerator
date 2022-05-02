@@ -223,4 +223,5 @@ public class IslandTile : MonoBehaviour
     public BlockType GetBlockType() => blockType;
     public void SetPositionMatrix(Vector3[] npm) => NearPositionMatrix = npm;
     public void SetGeneratorInstance(IslandGenerator ig) => Generator = ig;
+    public MeshFilter GetMeshFilter()=>meshFilter;
 }

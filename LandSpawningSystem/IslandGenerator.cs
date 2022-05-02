@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using Unity.Collections;
 using Unity.Jobs;
 using UnityEngine;
 public class IslandGenerator : MonoBehaviour
@@ -75,106 +77,40 @@ public class IslandGenerator : MonoBehaviour
         timer.Stop();
         timeTaken = timer.Elapsed;
 
-
-
-
-    }
-    public struct CombineMeshesJob : IJob
-    {
-        public GameObject GrassCombine_go, DirtCombine_go, RockCombine_go;
-        public Material Grass_m, Dirt_m, Rock_m;
-        List<MeshFilter> d_meshFilterss;
-        List<MeshFilter> g_meshFilterss;
-        List<MeshFilter> r_meshFilterss;
-        public List<IslandTile> IslandTiles;
-        public void Execute()
+        #region PrepareGo's for Mesh Combineing 
+        if (GrassCombine == null)
         {
-            foreach (IslandTile it in IslandTiles)
-            {
-                switch (it.GetBlockType())
-                {
-                    case IslandTile.BlockType.Dirt:
-                        d_meshFilterss.Add(it.GetComponent<MeshFilter>());
-                        break;
+            GrassCombine = new GameObject("Grass Combine");
 
-                    case IslandTile.BlockType.Grass:
-                        g_meshFilterss.Add(it.GetComponent<MeshFilter>());
-                        break;
-
-                    case IslandTile.BlockType.Rock:
-                        r_meshFilterss.Add(it.GetComponent<MeshFilter>());
-                        break;
-                }
-
-            }
-            CombineInstance[] g_combine = new CombineInstance[g_meshFilterss.Count];
-            CombineInstance[] d_combine = new CombineInstance[d_meshFilterss.Count];
-            CombineInstance[] r_combine = new CombineInstance[r_meshFilterss.Count];
-
-            int d = 0;
-            while (d < d_meshFilterss.Count)
-            {
-                Debug.Log(d_combine.Length + " " + d_meshFilterss.Count);
-                d_combine[d].mesh = d_meshFilterss[d].sharedMesh;
-                d_combine[d].transform = d_meshFilterss[d].transform.localToWorldMatrix;
-
-
-                d++;
-            }
-            int g = 0;
-            while (g < g_meshFilterss.Count)
-            {
-                g_combine[g].mesh = g_meshFilterss[g].sharedMesh;
-                g_combine[g].transform = g_meshFilterss[g].transform.localToWorldMatrix;
-
-
-                g++;
-            }
-            int r = 0;
-            while (r < r_meshFilterss.Count)
-            {
-                r_combine[r].mesh = r_meshFilterss[r].sharedMesh;
-                r_combine[r].transform = r_meshFilterss[r].transform.localToWorldMatrix;
-
-
-                r++;
-            }
-            if (GrassCombine_go == null)
-            {
-                GrassCombine_go = new GameObject("Grass Combine");
-
-                GrassCombine_go.AddComponent<MeshFilter>();
-                GrassCombine_go.AddComponent<MeshRenderer>();
-            }
-            GrassCombine_go.GetComponent<MeshFilter>().mesh = new Mesh();
-            GrassCombine_go.GetComponent<MeshFilter>().mesh.CombineMeshes(g_combine);
-            GrassCombine_go.GetComponent<MeshRenderer>().material = Grass_m;
-
-            if (DirtCombine_go == null)
-            {
-                DirtCombine_go = new GameObject("Dirt Combine");
-                DirtCombine_go.AddComponent<MeshFilter>();
-                DirtCombine_go.AddComponent<MeshRenderer>();
-            }
-            DirtCombine_go.GetComponent<MeshFilter>().mesh = new Mesh();
-            DirtCombine_go.GetComponent<MeshFilter>().mesh.CombineMeshes(d_combine);
-            DirtCombine_go.GetComponent<MeshRenderer>().material = Dirt_m;
-
-            if (RockCombine_go == null)
-            {
-                RockCombine_go = new GameObject("Rock Combine");
-                RockCombine_go.AddComponent<MeshFilter>();
-                RockCombine_go.AddComponent<MeshRenderer>();
-            }
-            RockCombine_go.GetComponent<MeshFilter>().mesh = new Mesh();
-            RockCombine_go.GetComponent<MeshFilter>().mesh.CombineMeshes(r_combine);
-            RockCombine_go.GetComponent<MeshRenderer>().material = Rock_m;
-
+            GrassCombine.AddComponent<MeshFilter>();
+            GrassCombine.AddComponent<MeshRenderer>();
+            m_GrassCombine = GrassCombine.GetComponent<MeshFilter>();
         }
+        if (DirtCombine == null)
+        {
+            DirtCombine = new GameObject("Dirt Combine");
+            DirtCombine.AddComponent<MeshFilter>();
+            DirtCombine.AddComponent<MeshRenderer>();
+            m_DirtCombine = DirtCombine.GetComponent<MeshFilter>();
+        }
+        if (RockCombine == null)
+        {
+            RockCombine = new GameObject("Rock Combine");
+            RockCombine.AddComponent<MeshFilter>();
+            RockCombine.AddComponent<MeshRenderer>();
+            m_RockCombine = RockCombine.GetComponent<MeshFilter>();
+        }
+        #endregion
+
+
     }
+    #region MeshCombineing
 
-
-    void CombineMeshes()
+    /// <summary>
+    ///Use this function to optimise island mesh. Gives much performance boost.  
+    /// </summary>
+    /// 
+    public void CombineMeshes()
     {
         #region old
         if (isCombineMeshes == true)
@@ -187,34 +123,23 @@ public class IslandGenerator : MonoBehaviour
                 switch (it.GetBlockType())
                 {
                     case IslandTile.BlockType.Dirt:
-                        d_meshFilterss.Add(it.GetComponent<MeshFilter>());
+                        d_meshFilterss.Add(it.GetMeshFilter());
                         break;
 
                     case IslandTile.BlockType.Grass:
-                        g_meshFilterss.Add(it.GetComponent<MeshFilter>());
+                        g_meshFilterss.Add(it.GetMeshFilter());
                         break;
 
                     case IslandTile.BlockType.Rock:
-                        r_meshFilterss.Add(it.GetComponent<MeshFilter>());
+                        r_meshFilterss.Add(it.GetMeshFilter());
                         break;
                 }
 
             }
-
-
             CombineInstance[] g_combine = new CombineInstance[g_meshFilterss.Count];
             CombineInstance[] d_combine = new CombineInstance[d_meshFilterss.Count];
             CombineInstance[] r_combine = new CombineInstance[r_meshFilterss.Count];
-            /*   int d = 0;
-               while (d < d_meshFilterss.Count)
-               {
 
-                   d_combine[d].mesh = d_meshFilterss[d].sharedMesh;
-                   d_combine[d].transform = d_meshFilterss[d].transform.localToWorldMatrix;
-
-
-                   d++;
-               }*/
             for (int d = 0; d < d_meshFilterss.Count; d++)
             {
                 d_combine[d].mesh = d_meshFilterss[d].sharedMesh;
@@ -226,48 +151,24 @@ public class IslandGenerator : MonoBehaviour
                 g_combine[g].mesh = g_meshFilterss[g].sharedMesh;
                 g_combine[g].transform = g_meshFilterss[g].transform.localToWorldMatrix;
             }
-       
+
             for (int r = 0; r < r_meshFilterss.Count; r++)
             {
                 r_combine[r].mesh = r_meshFilterss[r].sharedMesh;
                 r_combine[r].transform = r_meshFilterss[r].transform.localToWorldMatrix;
             }
 
-            if (GrassCombine == null)
-            {
-                GrassCombine = new GameObject("Grass Combine");
 
-                GrassCombine.AddComponent<MeshFilter>();
-                GrassCombine.AddComponent<MeshRenderer>();
-                m_GrassCombine = GrassCombine.GetComponent<MeshFilter>();
-            }
 
-            // GrassCombine.GetComponent<MeshFilter>().mesh = new Mesh();
-            //GrassCombine.GetComponent<MeshFilter>().mesh.CombineMeshes(g_combine); 
             m_GrassCombine.mesh = new Mesh();
 
             m_GrassCombine.mesh.CombineMeshes(g_combine);
 
             GrassCombine.GetComponent<MeshRenderer>().material = Grass;
 
-            if (DirtCombine == null)
-            {
-                DirtCombine = new GameObject("Dirt Combine");
-                DirtCombine.AddComponent<MeshFilter>();
-                DirtCombine.AddComponent<MeshRenderer>();
-                m_DirtCombine = DirtCombine.GetComponent<MeshFilter>();
-            }
             m_DirtCombine.mesh = new Mesh();
             m_DirtCombine.mesh.CombineMeshes(d_combine);
             DirtCombine.GetComponent<MeshRenderer>().material = Dirt;
-
-            if (RockCombine == null)
-            {
-                RockCombine = new GameObject("Rock Combine");
-                RockCombine.AddComponent<MeshFilter>();
-                RockCombine.AddComponent<MeshRenderer>();
-                m_RockCombine = RockCombine.GetComponent<MeshFilter>();
-            }
             m_RockCombine.mesh = new Mesh();
             m_RockCombine.mesh.CombineMeshes(r_combine);
             RockCombine.GetComponent<MeshRenderer>().material = Rock;
@@ -293,6 +194,7 @@ public class IslandGenerator : MonoBehaviour
         }*/
         #endregion
     }
+    #endregion
     private void LateUpdate()
     {
         //TESTING 
@@ -532,13 +434,13 @@ public class IslandGenerator : MonoBehaviour
     /// This function destroys tiles and recalculaters faces 
     /// </summary>
     /// <param name="itt"></param>
-    public void DestroyTileRecalculateFaces(IslandTile itt)
+    public void DestroyTileRecalculateFaces(IslandTile itt, bool _isCombineMeshes=false)
     {
         DestroyTile(itt, false);
         Vector3 pos = itt.transform.position;
         RecalculateFaces(pos);
         IslandTilesDictionary.Remove(pos);
-        isCombineMeshes = true;
+        if (_isCombineMeshes) { isCombineMeshes = true; }
     }
     /// <summary>
     /// This function only destroys tile and do nothing to face recalculation 
