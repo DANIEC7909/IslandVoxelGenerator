@@ -106,8 +106,10 @@ public class IslandGenerator : MonoBehaviour
     }
     #region MeshCombineing
 
+   
     /// <summary>
-    ///Use this function to optimise island mesh. Gives much performance boost.  
+    ///Use this function to optimise island mesh. Gives much performance boost. 
+    ///But be carefull because this function takes a lot of time so call it only once when you finish terafforming terrain
     /// </summary>
     /// 
     public void CombineMeshes()
@@ -115,7 +117,8 @@ public class IslandGenerator : MonoBehaviour
         #region old
         if (isCombineMeshes == true)
         {
-            List<MeshFilter> d_meshFilterss = new List<MeshFilter>();
+           List<MeshFilter> d_meshFilterss = new List<MeshFilter>();
+            
             List<MeshFilter> g_meshFilterss = new List<MeshFilter>();
             List<MeshFilter> r_meshFilterss = new List<MeshFilter>();
             foreach (IslandTile it in IslandTiles)
@@ -194,6 +197,7 @@ public class IslandGenerator : MonoBehaviour
         }*/
         #endregion
     }
+
     #endregion
     private void LateUpdate()
     {
