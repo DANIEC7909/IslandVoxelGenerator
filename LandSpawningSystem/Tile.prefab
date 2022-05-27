@@ -49,7 +49,7 @@ MeshRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5543191949104355766}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
@@ -113,7 +113,6 @@ MonoBehaviour:
   RockIslandMaterials:
   - {fileID: 2100000, guid: 311eff320e2ac6e4d8b7cca97ed9555f, type: 2}
   - {fileID: 2100000, guid: f0a37b7c63eb3434dbeef700c5fb5419, type: 2}
-  isHaveWalls: 0
   length: 1
   width: 1
   height: 1

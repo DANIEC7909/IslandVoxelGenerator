@@ -1,13 +1,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using Unity.Collections;
+using Unity.Jobs;
 using UnityEngine;
 public class IslandGenerator : MonoBehaviour
 {
     public List<Vector3> NonAlocatedPositions;
-    /// <summary>
-    /// Matrix/Scheme of positions to spawn blocks
-    /// </summary>
     public List<Vector3> AlocatedPositions;
     public List<Vector3> DestroyedPositions;
     [SerializeField] List<Vector3> Duplicates = new List<Vector3>();
@@ -30,37 +29,14 @@ public class IslandGenerator : MonoBehaviour
     [SerializeField] GameObject GrassCombine, DirtCombine, RockCombine;
     [SerializeField] MeshFilter m_GrassCombine, m_DirtCombine, m_RockCombine;
     [SerializeField] bool isCombineMeshes = false;
-    Thread CleanDupes_T;
-    Thread CalculateNearVectorAfterSpawn;
-    private void cleanDupes()
-    {
-        foreach (Vector3 dup in AlocatedPositions)
-        {
-            for (int i = 0; i < NonAlocatedPositions.Count; i++)
-            {
-                if (dup == NonAlocatedPositions[i])
-                {
-                    NonAlocatedPositions.Remove(dup);
-                    Debug.LogWarning("Removing Dupes" + dup);
-                    
-                }
-            }
-        }
-      
-    }
-
-    void calculateAllPositionsAfterSpawn()
-    {
-        foreach(Vector3 pos in AlocatedPositions)
-        {
-            NonAlocatedPositions.AddRange(CalculateNearVectorMatrix(pos, CalculateMatrixSide.all));
-        }
-        CleanDupes();
-    }
     private void Start()
     {
+        var timer = new System.Diagnostics.Stopwatch();
+        timer.Start();
+        //create pivot 
         AlocatedPositions.Add(PivotTransform.position);
         Vector3 InitcachedPos = AlocatedPositions[0];
+
         CalculateNearVectorMatrix(InitcachedPos, CalculateMatrixSide.DownForwardBackwardLeftRight, NonAlocatedPositions);
 
         while (iterations < howMuchSpawn)
@@ -73,70 +49,76 @@ public class IslandGenerator : MonoBehaviour
                 NonAlocatedPositions.Remove(cachedFreePos);
                 CalculateNearVectorMatrix(cachedFreePos, CalculateMatrixSide.DownForwardBackwardLeftRight, NonAlocatedPositions);
             }
-       /*     else
+            else
             {
                 NonAlocatedPositions.Remove(cachedFreePos);
                 iterations--;
-            }*/
+            }
             iterations++;
         }
-        
-  
-      
-       if (IsMold) MoldIsland();
-       
-     CleanDupes_T=  new Thread(CleanDupes);
-        CleanDupes_T.Start();
-
+        //cleanup dupes
+        foreach (Vector3 dup in AlocatedPositions)
+        {
+            for (int i = 0; i < NonAlocatedPositions.Count; i++)
+            {
+                if (dup == NonAlocatedPositions[i])
+                {
+                    NonAlocatedPositions.Remove(dup);
+                }
+            }
+        }
+        //spawn cubes by generated pos Matrix
         foreach (Vector3 pos in AlocatedPositions)
         {
-        SpawnTileCalc(pos);
-           
+            SpawnTileCalc(pos);
         }
+        if (IsMold) MoldIsland();
 
-     
+        timer.Stop();
+        timeTaken = timer.Elapsed;
 
         #region PrepareGo's for Mesh Combineing 
         if (GrassCombine == null)
         {
             GrassCombine = new GameObject("Grass Combine");
 
-            m_GrassCombine = GrassCombine.AddComponent<MeshFilter>();
+            GrassCombine.AddComponent<MeshFilter>();
             GrassCombine.AddComponent<MeshRenderer>();
-         
+            m_GrassCombine = GrassCombine.GetComponent<MeshFilter>();
         }
         if (DirtCombine == null)
         {
             DirtCombine = new GameObject("Dirt Combine");
-            m_DirtCombine = DirtCombine.AddComponent<MeshFilter>();
+            DirtCombine.AddComponent<MeshFilter>();
             DirtCombine.AddComponent<MeshRenderer>();
-         
+            m_DirtCombine = DirtCombine.GetComponent<MeshFilter>();
         }
         if (RockCombine == null)
         {
             RockCombine = new GameObject("Rock Combine");
-            m_RockCombine = RockCombine.AddComponent<MeshFilter>();
+            RockCombine.AddComponent<MeshFilter>();
             RockCombine.AddComponent<MeshRenderer>();
-    
+            m_RockCombine = RockCombine.GetComponent<MeshFilter>();
         }
         #endregion
- CalculateNearVectorAfterSpawn = new Thread(calculateAllPositionsAfterSpawn);
-       CalculateNearVectorAfterSpawn.Start();
+
 
     }
     #region MeshCombineing
 
-
+   
     /// <summary>
     ///Use this function to optimise island mesh. Gives much performance boost. 
     ///But be carefull because this function takes a lot of time so call it only once when you finish terafforming terrain
     /// </summary>
+    /// 
     public void CombineMeshes()
     {
         #region old
         if (isCombineMeshes == true)
         {
-            List<MeshFilter> d_meshFilterss = new List<MeshFilter>();
+           List<MeshFilter> d_meshFilterss = new List<MeshFilter>();
+            
             List<MeshFilter> g_meshFilterss = new List<MeshFilter>();
             List<MeshFilter> r_meshFilterss = new List<MeshFilter>();
             foreach (IslandTile it in IslandTiles)
@@ -197,7 +179,23 @@ public class IslandGenerator : MonoBehaviour
         }
         isCombineMeshes = false;
         #endregion
-    
+        #region jobs
+        /*if (isCombineMeshes)
+        {
+            CombineMeshesJob meshesJob = new CombineMeshesJob();
+            meshesJob.Grass_m = Grass;
+            meshesJob.Dirt_m = Dirt;
+            meshesJob.Rock_m = Rock;
+            meshesJob.IslandTiles = IslandTiles;
+            meshesJob.GrassCombine_go = GrassCombine;
+            meshesJob.DirtCombine_go = DirtCombine;
+            meshesJob.RockCombine_go = RockCombine;
+            JobHandle handle = meshesJob.Schedule();
+            handle.Complete();
+
+            isCombineMeshes = false;
+        }*/
+        #endregion
     }
 
     #endregion
@@ -318,7 +316,7 @@ public class IslandGenerator : MonoBehaviour
     /// <param name="pos"></param>
     /// <param name="cms"></param>
     /// <returns></returns>
-    public Vector3[] CalculateNearVectorMatrix(Vector3 pos, CalculateMatrixSide cms, List<Vector3> listToAdd, bool Add = true, bool checkIsContains = true)
+    public Vector3[] CalculateNearVectorMatrix(Vector3 pos, CalculateMatrixSide cms, List<Vector3> listToAdd, bool AddRemove = true)
     {
         Vector3[] nPos = null;
         switch (cms)
@@ -365,59 +363,35 @@ public class IslandGenerator : MonoBehaviour
                 nPos[5] = pos + Vector3.up;
                 break;
         }
-        if (Add)
+        if (AddRemove)
         {
-          /*  foreach (Vector3 p in nPos)
+            foreach (Vector3 p in nPos)
             {
-                if (checkIsContains)
-                {
-                    if (!listToAdd.Contains(p))
-                    {
-                        listToAdd.Add(p);
-                    }
-                }
-                else
-                {
-                    listToAdd.Add(p);
-                }
-            }*/
-            listToAdd.AddRange(nPos);
+                listToAdd.Add(p);
+            }
         }
         else
         {
-             foreach (Vector3 p in nPos)
-              {
-                  if (checkIsContains)
-                  {
-                      if (listToAdd.Contains(p))
-                      { listToAdd.Remove(p); }
-                  }
-                  else
-                  {
-                      listToAdd.Remove(p);
-                  }
-              }
-          
+            foreach (Vector3 p in nPos)
+            {
+                listToAdd.Remove(p);
+            }
         }
         return nPos;
     }
     /// <summary>
     /// This function makes islands looks pretier(Fills empty cubes).
     /// </summary>
-    public void MoldIsland(bool IsStart = false)
+    public void MoldIsland()
     {
         Fixing = true;
 
         Duplicates = NonAlocatedPositions.Distinct().ToList();
-        AlocatedPositions.AddRange(Duplicates);
 
-        if (IsStart)
+        foreach (Vector3 p in Duplicates)
         {
-            foreach (Vector3 p in Duplicates)
-            {
-                SpawnTile(p);
+            SpawnTile(p);
 
-            }
         }
         Fixing = false;
         Done = true;
@@ -427,7 +401,7 @@ public class IslandGenerator : MonoBehaviour
     /// </summary>
     public void FixIsland()
     {
-     
+        List<IslandTile> ToRegenerate = new List<IslandTile>();
         foreach (Vector3 pos in DestroyedPositions)
         {
             SpawnTile(pos);
@@ -438,35 +412,7 @@ public class IslandGenerator : MonoBehaviour
         DestroyedPositions.Clear();
 
     }
-
-    public void RecalculateFaces(Vector3[] pos)
-    {
-        foreach(Vector3 p in pos) { 
-        Vector3[] PositionsToRegenerate = CalculateNearVectorMatrix(p, CalculateMatrixSide.all);
-
-        List<Vector3> ToRegenerateMatrix = new List<Vector3>();
-
-        foreach (Vector3 PtRpos in PositionsToRegenerate)
-        {
-            if (AlocatedPositions.Contains(PtRpos))
-            {
-                ToRegenerateMatrix.Add(PtRpos);
-            }
-        }
-        foreach (Vector3 trm in ToRegenerateMatrix)
-        {
-            IslandTile itg;
-            bool hasValue = IslandTilesDictionary.TryGetValue(trm, out itg); // IslandTilesDictionary[trm];
-            if (hasValue) { itg.GenerateCube(); }
-        }
-
-        }
-    }
-    /// <summary>
-    /// More light than FFR(). Because only goes through obects in closest position.
-    /// </summary>
-    /// <param name="pos"></param>
-    public void RecalculateFaces(Vector3 pos)
+    void RecalculateFaces(Vector3 pos)
     {
 
         Vector3[] PositionsToRegenerate = CalculateNearVectorMatrix(pos, CalculateMatrixSide.all);
@@ -489,20 +435,10 @@ public class IslandGenerator : MonoBehaviour
 
     }
     /// <summary>
-    /// Very tough.
-    /// </summary>
-    public void ForceFaceRecalculation()
-    {
-        foreach(IslandTile it in IslandTiles)
-        {
-            it.GenerateCube();
-        }
-    }
-    /// <summary>
     /// This function destroys tiles and recalculaters faces 
     /// </summary>
     /// <param name="itt"></param>
-    public void DestroyTileRecalculateFaces(IslandTile itt, bool _isCombineMeshes = false)
+    public void DestroyTileRecalculateFaces(IslandTile itt, bool _isCombineMeshes=false)
     {
         DestroyTile(itt, false);
         Vector3 pos = itt.transform.position;
@@ -540,18 +476,18 @@ public class IslandGenerator : MonoBehaviour
         if (!IslandTilesDictionary.ContainsKey(pos))
         {
             IslandTile it = Instantiate(tileGameObject, pos, Quaternion.identity).GetComponent<IslandTile>();
-           IslandTiles.Add(it);
+            //  it.gameObject.transform.SetParent(gameObject.transform);
+            IslandTiles.Add(it);
             IslandTilesDictionary.Add(pos, it);
 
             setMaterial(it, pos);
             it.SetPositionMatrix(CalculateNearVectorMatrix(pos, CalculateMatrixSide.DownForwardBackwardLeftRight));
             it.SetGeneratorInstance(this);
-      
             return it;
         }
         else
         {
-            Debug.LogWarning("Cannot spawn block in existing  position"+pos);
+            Debug.LogWarning("Cannot spawn block in existing  position");
             return null;
         }
     }
@@ -571,33 +507,43 @@ public class IslandGenerator : MonoBehaviour
             IslandTilesDictionary.Add(pos, it);
 
             setMaterial(it, pos);
-            Vector3[] NearMatrix = CalculateNearVectorMatrix(pos, CalculateMatrixSide.DownForwardBackwardLeftRight);
-            it.SetPositionMatrix(NearMatrix);
-            foreach (Vector3 p in NearMatrix) { 
-                if(!NonAlocatedPositions.Contains(p))
-                {
-                    NonAlocatedPositions.Add(p);
-                }
-            }
+            it.SetPositionMatrix(CalculateNearVectorMatrix(pos, CalculateMatrixSide.DownForwardBackwardLeftRight));
             it.SetGeneratorInstance(this);
-            CleanDupes_T = new Thread(CleanDupes);
-            CleanDupes_T.Start();
             return it;
         }
         else
         {
-            Debug.LogWarning("Cannot spawn block in existing  position" + pos);
+            Debug.LogWarning("Cannot spawn block in existing  position");
             return null;
         }
     }
-   
     public IslandTile SpawnTileRandom()
     {
         int id = UnityEngine.Random.Range(0, NonAlocatedPositions.Count);
-        IslandTile it= SpawnTile(NonAlocatedPositions[id]);
-       // it.MeshRenderer.enabled = true;
-        return it;
+        while (NonAlocatedPositions[id].y > 0)
+        {
+            id = UnityEngine.Random.Range(0, NonAlocatedPositions.Count);
+        }
+        if (!IslandTilesDictionary.ContainsKey(NonAlocatedPositions[id]))
+        {
+            IslandTile it = Instantiate(tileGameObject, NonAlocatedPositions[id], Quaternion.identity).GetComponent<IslandTile>();
+            setMaterial(it, NonAlocatedPositions[id]);
+            NonAlocatedPositions.Remove(NonAlocatedPositions[id]);
+            AlocatedPositions.Add(it.transform.position);
+            it.SetGeneratorInstance(this);
+            IslandTiles.Add(it);
+            Vector3 pos = it.transform.position;
+            IslandTilesDictionary.Add(pos, it);
+            it.SetPositionMatrix(CalculateNearVectorMatrix(it.transform.position, CalculateMatrixSide.DownForwardBackwardLeftRight));
+            return it;
+        }
+        else
+        {
+            Debug.LogWarning("Cannot spawn block in existing  position");
+            return null;
+        }
     }
+
     public List<Vector3> GetAlocatedPositions() => AlocatedPositions;
     public List<Vector3> GetNonAlocatedPositions() => NonAlocatedPositions;
     public bool CanSpawnBlocks(bool can) => CanSpawn = can;

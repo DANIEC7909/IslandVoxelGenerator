@@ -16,7 +16,6 @@ public class IslandTile : MonoBehaviour
     [SerializeField] Material[] RockIslandMaterials;
     public enum BlockType { Grass, Dirt, Rock };
     BlockType blockType;
-   public bool isHaveWalls;
     [SerializeField] float length = 1f;
     [SerializeField] float width = 1f;
     [SerializeField] float height = 1f;
@@ -28,16 +27,16 @@ public class IslandTile : MonoBehaviour
     {
 
         GenerateCube();
-      /*  mr = GetComponent<MeshRenderer>();
+        mr = GetComponent<MeshRenderer>();
         _cube.GetComponent<MeshRenderer>();
-        meshFilter = _cube.GetComponent<MeshFilter>();*/
+        meshFilter = _cube.GetComponent<MeshFilter>();
         gameObject.isStatic = true;
        // TileCollider.GetComponent<BoxCollider>();
     }
 
     public void GenerateCube()
     {
-       // _cube = gameObject;
+        _cube = gameObject;
         mesh = meshFilter.mesh;
 
         Vector3[] c = new Vector3[8];
@@ -115,7 +114,6 @@ public class IslandTile : MonoBehaviour
             name = "nowalls";
             TileCollider.enabled = false;
             mesh.triangles = new int[6];
-            isHaveWalls = false;
         }
         else
         {
@@ -131,9 +129,8 @@ public class IslandTile : MonoBehaviour
                 Triangles.Add(3);
                 Triangles.Add(2);
                 Triangles.Add(1);
-                name = name + "bottom";
+                name = name + " bottom";
                 TileCollider.enabled = true;
-                isHaveWalls = true;
             }
             if (Generator.AlocatedPositions.Contains(transform.position + Vector3.left))//left
             { }
@@ -145,9 +142,9 @@ public class IslandTile : MonoBehaviour
                 Triangles.Add(7);
                 Triangles.Add(6);
                 Triangles.Add(5);
-                name = name + "left";
+                name = name + " left";
                 TileCollider.enabled = true;
-                isHaveWalls = true;
+
             }
             if (Generator.AlocatedPositions.Contains(transform.position + Vector3.forward))//front  
             { }
@@ -159,9 +156,8 @@ public class IslandTile : MonoBehaviour
                 Triangles.Add(11);
                 Triangles.Add(10);
                 Triangles.Add(9);
-                name = name + "front";
+                name = name + " front";
                 TileCollider.enabled = true;
-                isHaveWalls = true;
             }
             if (Generator.AlocatedPositions.Contains(transform.position + Vector3.back))//back
             { }
@@ -173,9 +169,8 @@ public class IslandTile : MonoBehaviour
                 Triangles.Add(15);
                 Triangles.Add(14);
                 Triangles.Add(13);
-                name = name + "back";
+                name = name + " back";
                 TileCollider.enabled = true;
-                isHaveWalls = true;
             }
             if (Generator.AlocatedPositions.Contains(transform.position + Vector3.right))//right
             { }
@@ -187,9 +182,8 @@ public class IslandTile : MonoBehaviour
                 Triangles.Add(19);
                 Triangles.Add(18);
                 Triangles.Add(17);
-                name = name + "right";
+                name = name + " right";
                 TileCollider.enabled = true;
-                isHaveWalls = true;
             }
             if (Generator.AlocatedPositions.Contains(transform.position + Vector3.up))//top
             { }
@@ -201,20 +195,12 @@ public class IslandTile : MonoBehaviour
                 Triangles.Add(23);
                 Triangles.Add(22);
                 Triangles.Add(21);
-                name = name + "top";
+                name = name + " top";
                 TileCollider.enabled = true;
-                isHaveWalls = true;
             }
             mesh.triangles = Triangles.ToArray();
         }
-        if (isHaveWalls)
-        {
-            TileCollider.enabled = true;
-        }
-        else
-        {
-            TileCollider.enabled = false;
-        }
+
     }
 
     public void SetBlockType(BlockType bt)
