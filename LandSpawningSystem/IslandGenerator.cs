@@ -29,6 +29,7 @@ public class IslandGenerator : MonoBehaviour
     [SerializeField] GameObject GrassCombine, DirtCombine, RockCombine;
     [SerializeField] MeshFilter m_GrassCombine, m_DirtCombine, m_RockCombine;
     [SerializeField] bool isCombineMeshes = false;
+   
     private void Start()
     {
         var timer = new System.Diagnostics.Stopwatch();
@@ -102,11 +103,40 @@ public class IslandGenerator : MonoBehaviour
         }
         #endregion
 
+        Thread CNMVThread = new Thread(CalculateNonAlocPos);
+        CNMVThread.Start();
+    }
+    public void CalculateNonAlocPosAsync()
+    {
+          Thread CNMVThread = new Thread(CalculateNonAlocPos);
+    CNMVThread.Start();
+    }
+    void CalculateNonAlocPos()
+    {
+        foreach (Vector3 pos in AlocatedPositions)
+        {
 
+            Vector3[] poses = CalculateNearVectorMatrix(pos, CalculateMatrixSide.all);
+            foreach (Vector3 CNMpos in poses)
+            {
+                if (!AlocatedPositions.Contains(CNMpos))
+                {
+                    NonAlocatedPositions.Add(CNMpos);
+                }
+            }
+        }
+        foreach (Vector3 dup in AlocatedPositions)
+        {
+            for (int i = 0; i < NonAlocatedPositions.Count; i++)
+            {
+                if (dup == NonAlocatedPositions[i])
+                {
+                    NonAlocatedPositions.Remove(dup);
+                }
+            }
+        }
     }
     #region MeshCombineing
-
-   
     /// <summary>
     ///Use this function to optimise island mesh. Gives much performance boost. 
     ///But be carefull because this function takes a lot of time so call it only once when you finish terafforming terrain
@@ -405,14 +435,13 @@ public class IslandGenerator : MonoBehaviour
         foreach (Vector3 pos in DestroyedPositions)
         {
             SpawnTile(pos);
-
             RecalculateFaces(pos);
         }
 
         DestroyedPositions.Clear();
-
+        isCombineMeshes = true;
     }
-    void RecalculateFaces(Vector3 pos)
+   public void RecalculateFaces(Vector3 pos)
     {
 
         Vector3[] PositionsToRegenerate = CalculateNearVectorMatrix(pos, CalculateMatrixSide.all);
@@ -446,6 +475,7 @@ public class IslandGenerator : MonoBehaviour
         IslandTilesDictionary.Remove(pos);
         if (_isCombineMeshes) { isCombineMeshes = true; }
     }
+
     /// <summary>
     /// This function only destroys tile and do nothing to face recalculation 
     /// </summary>
@@ -463,7 +493,7 @@ public class IslandGenerator : MonoBehaviour
         {
             IslandTilesDictionary.Remove(pos);
         }
-        isCombineMeshes = true;
+       // isCombineMeshes = true;
     }
     /// <summary>
     /// This functions spawn block in current position by UsedPostions var on the START
@@ -550,5 +580,6 @@ public class IslandGenerator : MonoBehaviour
     public bool IsMoldIsland(bool im) => IsMold = im;
     public int SetBlockAmount(int amount) => howMuchSpawn = amount;
     public int GetBlockAmount() => howMuchSpawn;
+    public void CombineBlocks() { isCombineMeshes = true; }
     public List<IslandTile> GetIslandTiles() => IslandTiles;
 }
