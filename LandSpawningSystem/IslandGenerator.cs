@@ -1,8 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using Unity.Collections;
-using Unity.Jobs;
 using UnityEngine;
 public class IslandGenerator : MonoBehaviour
 {
@@ -16,6 +14,7 @@ public class IslandGenerator : MonoBehaviour
     [SerializeField] int howMuchSpawn;
     [SerializeField] GameObject tileGameObject;
     [SerializeField] bool CanSpawn = true;
+    public bool isCleaningFinished;
     [SerializeField] bool IsMold = true;
     public bool CanSpawn_g => CanSpawn;
     public bool IsMold_g => IsMold;
@@ -29,9 +28,23 @@ public class IslandGenerator : MonoBehaviour
     [SerializeField] GameObject GrassCombine, DirtCombine, RockCombine;
     [SerializeField] MeshFilter m_GrassCombine, m_DirtCombine, m_RockCombine;
     [SerializeField] bool isCombineMeshes = false;
-   
+    [Header("Which side we want to choose while clean up")]
+    [SerializeField] CalculateMatrixSide CalculateCurrentFacesToClean=CalculateMatrixSide.DownForwardBackwardLeftRight;
+    #region Events
+    public delegate void OnCalculationStopped();
+    public event OnCalculationStopped CalculationStopped;
+    /// <summary>
+    /// This Events is invoked when block is spawned 
+    /// </summary>
+    /// <param name="pos"></param>
+    /// <param name="SpawnType">0-SpawnTile, 1-SpawnTileCalc, 2-SpawnTileRandom</param>
+    /// <param name="tile"></param>
+    public delegate void OnBlockSpawned(Vector3 pos,int SpawnType , IslandTile tile);
+    public event OnBlockSpawned BlockSpawned;
+    #endregion
     private void Start()
     {
+        CalculationStopped += IslandGenerator_CalculationStopped;
         var timer = new System.Diagnostics.Stopwatch();
         timer.Start();
         //create pivot 
@@ -105,21 +118,31 @@ public class IslandGenerator : MonoBehaviour
 
         Thread CNMVThread = new Thread(CalculateNonAlocPos);
         CNMVThread.Start();
+
     }
+
+    private void IslandGenerator_CalculationStopped()
+    {
+        isCleaningFinished = true;
+    }
+
     public void CalculateNonAlocPosAsync()
     {
-          Thread CNMVThread = new Thread(CalculateNonAlocPos);
-    CNMVThread.Start();
+        Thread CNMVThread = new Thread(CalculateNonAlocPos);
+        CNMVThread.Start();
+        //CNMVThread.Join();
+        //MoldIsland();
     }
     void CalculateNonAlocPos()
     {
+        isCleaningFinished = false;
         foreach (Vector3 pos in AlocatedPositions)
         {
 
-            Vector3[] poses = CalculateNearVectorMatrix(pos, CalculateMatrixSide.all);
+            Vector3[] poses = CalculateNearVectorMatrix(pos, CalculateCurrentFacesToClean);
             foreach (Vector3 CNMpos in poses)
             {
-                if (!AlocatedPositions.Contains(CNMpos))
+                if (!AlocatedPositions.Contains(CNMpos) && !NonAlocatedPositions.Contains(CNMpos))
                 {
                     NonAlocatedPositions.Add(CNMpos);
                 }
@@ -135,6 +158,8 @@ public class IslandGenerator : MonoBehaviour
                 }
             }
         }
+
+         CalculationStopped?.Invoke();
     }
     #region MeshCombineing
     /// <summary>
@@ -147,8 +172,8 @@ public class IslandGenerator : MonoBehaviour
         #region old
         if (isCombineMeshes == true)
         {
-           List<MeshFilter> d_meshFilterss = new List<MeshFilter>();
-            
+            List<MeshFilter> d_meshFilterss = new List<MeshFilter>();
+
             List<MeshFilter> g_meshFilterss = new List<MeshFilter>();
             List<MeshFilter> r_meshFilterss = new List<MeshFilter>();
             foreach (IslandTile it in IslandTiles)
@@ -233,6 +258,7 @@ public class IslandGenerator : MonoBehaviour
     {
         //TESTING 
         CombineMeshes();
+
     }
     /// <summary>
     /// Regenerates Island
@@ -412,19 +438,26 @@ public class IslandGenerator : MonoBehaviour
     /// <summary>
     /// This function makes islands looks pretier(Fills empty cubes).
     /// </summary>
-    public void MoldIsland()
+    public void MoldIsland(bool isCombine = false, bool isSpawn = true)
     {
         Fixing = true;
 
         Duplicates = NonAlocatedPositions.Distinct().ToList();
 
-        foreach (Vector3 p in Duplicates)
+        if (isSpawn)
         {
-            SpawnTile(p);
-
+            foreach (Vector3 p in Duplicates)
+            {
+                SpawnTile(p);
+            }
         }
         Fixing = false;
         Done = true;
+        if (isCombine)
+        {
+            isCombineMeshes = true;
+        }
+        CalculateNonAlocPosAsync();
     }
     /// <summary>
     /// This function fixes island based on DestroyedPostions Matrix.
@@ -441,7 +474,7 @@ public class IslandGenerator : MonoBehaviour
         DestroyedPositions.Clear();
         isCombineMeshes = true;
     }
-   public void RecalculateFaces(Vector3 pos)
+    public void RecalculateFaces(Vector3 pos)
     {
 
         Vector3[] PositionsToRegenerate = CalculateNearVectorMatrix(pos, CalculateMatrixSide.all);
@@ -467,7 +500,7 @@ public class IslandGenerator : MonoBehaviour
     /// This function destroys tiles and recalculaters faces 
     /// </summary>
     /// <param name="itt"></param>
-    public void DestroyTileRecalculateFaces(IslandTile itt, bool _isCombineMeshes=false)
+    public void DestroyTileRecalculateFaces(IslandTile itt, bool _isCombineMeshes = false)
     {
         DestroyTile(itt, false);
         Vector3 pos = itt.transform.position;
@@ -493,7 +526,7 @@ public class IslandGenerator : MonoBehaviour
         {
             IslandTilesDictionary.Remove(pos);
         }
-       // isCombineMeshes = true;
+        // isCombineMeshes = true;
     }
     /// <summary>
     /// This functions spawn block in current position by UsedPostions var on the START
@@ -513,6 +546,7 @@ public class IslandGenerator : MonoBehaviour
             setMaterial(it, pos);
             it.SetPositionMatrix(CalculateNearVectorMatrix(pos, CalculateMatrixSide.DownForwardBackwardLeftRight));
             it.SetGeneratorInstance(this);
+            BlockSpawned?.Invoke(pos, 1, it);
             return it;
         }
         else
@@ -539,6 +573,7 @@ public class IslandGenerator : MonoBehaviour
             setMaterial(it, pos);
             it.SetPositionMatrix(CalculateNearVectorMatrix(pos, CalculateMatrixSide.DownForwardBackwardLeftRight));
             it.SetGeneratorInstance(this);
+            BlockSpawned?.Invoke(pos, 0, it);
             return it;
         }
         else
@@ -565,6 +600,7 @@ public class IslandGenerator : MonoBehaviour
             Vector3 pos = it.transform.position;
             IslandTilesDictionary.Add(pos, it);
             it.SetPositionMatrix(CalculateNearVectorMatrix(it.transform.position, CalculateMatrixSide.DownForwardBackwardLeftRight));
+            BlockSpawned?.Invoke(pos, 2, it);
             return it;
         }
         else
